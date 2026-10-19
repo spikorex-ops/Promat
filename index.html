@@ -423,7 +423,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function loadData(admin) { const data = await getStored('adat/data.json'); let seed = {}; if (admin && data) { try { seed = (await getStored('adat/seed.json')) || {}; } catch (e) { seed = {}; } } return { data, seed }; }
   function showUpload(err) {
     screen(`<h2>Alapadatok feltöltése (egyszer kell)</h2><p>A rendszerek, idomok és a beépített alapadatok (árak, TIG-ek, bizonylatok) a Supabase privát tárolójába kerülnek. A cégek csak a modellt kapják meg, az árakat nem.</p>
-      <p class="mute">Válaszd ki a <b>promat-alapadatok-v45.json</b> fájlt (a Program mappában).</p><div class="msg err" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
+      <p class="mute">Válaszd ki a legfrissebb <b>promat-alapadatok-vNN.json</b> fájlt (a Program mappában).</p><div class="msg err" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
       <input type="file" id="pf" accept=".json,application/json"><button id="pgo">Feltöltés</button><button class="sec" id="pout">Kijelentkezés</button>`);
     $('#pout').onclick = () => sb.auth.signOut().then(() => location.reload());
     $('#pgo').onclick = async () => { const f = $('#pf').files[0]; if (!f) return msg('err', 'Válaszd ki a fájlt.'); const go = $('#pgo'); busy(go, true);
@@ -517,7 +517,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   // ---------- telepíthető alkalmazás + új verzió jelzése ----------
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => { });
-    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data === 'uj-verzio' && !$('#pupd')) { const d = document.createElement('div'); d.id = 'pupd'; d.innerHTML = 'Új programverzió érhető el. <button>Frissítés</button>'; d.querySelector('button').onclick = () => { const pq = lsGet('promat-pending', []); if (pq.length && navigator.onLine === false) { alert('Előbb várd meg, hogy a függő rögzítések feltöltődjenek.'); return; } location.reload(); }; document.body.appendChild(d); } });
+    // v54: automatikus átváltás az új programverzióra – csak akkor, ha épp nem gépelsz / nincs nyitva ablak
+    let UJ = false;
+    const busy = () => { if (navigator.onLine !== false && lsGet('promat-pending', []).length) return true; const a = document.activeElement; if (a && (/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) || a.isContentEditable)) return true;
+      let el = document.elementFromPoint(innerWidth / 2, innerHeight / 2); while (el && el !== document.body) { if (!/^(puser|pupd|pboot)$/.test(el.id) && getComputedStyle(el).position === 'fixed') return true; el = el.parentElement; } return false; };
+    const tryReload = () => { if (!UJ) return; if (!busy() || document.hidden && !(navigator.onLine !== false && lsGet('promat-pending', []).length) && !(document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName))) location.reload(); };
+    navigator.serviceWorker.addEventListener('message', ev => { if (ev.data !== 'uj-verzio' || UJ) return; UJ = true;
+      const d = document.createElement('div'); d.id = 'pupd'; d.innerHTML = 'Új programverzió – magától frissül, amint befejezed, amit csinálsz. <button>Most</button>'; d.querySelector('button').onclick = () => location.reload(); document.body.appendChild(d);
+      tryReload(); setInterval(tryReload, 15000); });
+    const check = () => { const c = navigator.serviceWorker.controller; if (c && navigator.onLine !== false) c.postMessage('ellenoriz'); };
+    setInterval(check, 10 * 60 * 1000); document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); else check(); });
   }
   window.addEventListener('hashchange', () => { if (/[#&]m=/.test(location.hash)) location.reload(); });
   window.__promatBoot = { start, b64e, b64d };
@@ -13346,7 +13355,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v53 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v54 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
