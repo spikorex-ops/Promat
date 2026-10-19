@@ -1,5 +1,5 @@
 -- =====================================================================
--- Promat konszignáció – Supabase adatbázis (v45)
+-- Promat konszignáció – Supabase adatbázis (v57: + felhasználónév, menütiltás, jelszó-visszaállítás)
 -- Bemásolandó: Supabase → SQL Editor → New query → Run. Többször is
 -- lefuttatható (minden "if not exists" / "or replace").
 --
@@ -299,6 +299,38 @@ begin
   delete from public.meghivok where kod = p_kod;
 end $$;
 
+-- ---------- v57: személyre szabott menük és jelszó-visszaállítás ----------
+-- tilt: azok a menüpontok, amelyeket ez az ember NEM lát (a szerepe által engedettekből vesz el; árat / elszámolást
+-- ettől függetlenül csak az admin kap az adatbázistól). Felhasználónév: a program <név>@promat.invalid címen tárolja.
+alter table public.profilok add column if not exists tilt text[] not null default '{}';
+create extension if not exists pgcrypto with schema extensions;
+
+create or replace function public.kezelheti(p_user uuid) returns boolean
+language plpgsql stable security definer set search_path = public as $$
+declare me public.profilok; t public.profilok;
+begin
+  select * into me from public.profilok where user_id = auth.uid() and aktiv;
+  select * into t from public.profilok where user_id = p_user;
+  if me.user_id is null or t.user_id is null or p_user = me.user_id then return false; end if;
+  if me.szerep = 'admin' then return true; end if;
+  return me.szerep = 'cegvezeto' and t.ceg_id is not distinct from me.ceg_id and t.szerep in ('rogzito','olvaso');
+end $$;
+
+create or replace function public.profil_tilt(p_user uuid, p_tilt text[]) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.kezelheti(p_user) then raise exception 'not_granted: ennek az embernek a menüit nem állíthatod' using errcode = '42501'; end if;
+  update public.profilok set tilt = coalesce((select array_agg(distinct x) from unnest(p_tilt) x where coalesce(x, '') <> ''), '{}') where user_id = p_user;
+end $$;
+
+create or replace function public.jelszo_allit(p_user uuid, p_jelszo text) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.kezelheti(p_user) then raise exception 'not_granted: ennek az embernek a jelszavát nem állíthatod' using errcode = '42501'; end if;
+  if length(coalesce(p_jelszo, '')) < 8 then raise exception 'invalid_argument: a jelszó legalább 8 karakter legyen' using errcode = '22023'; end if;
+  update auth.users set encrypted_password = extensions.crypt(p_jelszo, extensions.gen_salt('bf', 10)), updated_at = now() where id = p_user;
+end $$;
+
 -- ---------- sorszintű olvasási szabályok ----------
 alter table public.cegek enable row level security;
 alter table public.profilok enable row level security;
@@ -327,7 +359,8 @@ revoke execute on all functions in schema public from anon;
 grant execute on function public.doc_set(text, text, jsonb), public.doc_merge(text, text, jsonb), public.doc_del(text, text), public.doc_batch(jsonb),
   public.admin_igenyles(text), public.meghivo_uj(text, text, int, int), public.csatlakozas(text, text), public.profil_allit(uuid, boolean, text),
   public.ceg_ment(text, text, text, boolean, boolean, boolean), public.ceg_rendszerek(text, text[]), public.meghivo_torol(text),
-  public.en_profil(), public.is_admin(), public.is_tag(), public.en_ceg() to authenticated;
+  public.en_profil(), public.is_admin(), public.is_tag(), public.en_ceg(),
+  public.kezelheti(uuid), public.profil_tilt(uuid, text[]), public.jelszo_allit(uuid, text) to authenticated;
 
 -- ---------- élő frissítés (más gépen rögzített adat azonnal megjelenik) ----------
 alter table public.docs replica identity full;
