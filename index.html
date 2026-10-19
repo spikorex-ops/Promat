@@ -13346,7 +13346,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v52 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v53 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14274,6 +14274,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const brushAv = av => { const q = avP(av); if (q.part && BR.piece) { const pid = pidOfPart(q.sy, q.n, q.part); if (pid) return brushApply(q.sy, q.n, [pid]); } return brushApply(q.sy, q.n, q.part && !BR.piece ? allUnits().rows.filter(x => x.sys === q.sy && x.n === q.n).map(x => x.pid) : undefined); };
   // a darabok testei a gyártási (szabás szerinti) lapokból: hosszanti egyenesnél darabonként külön test
   const pieceGeo = (e, g0) => { if (!g0 || !e.fr || !g0.info || !g0.info.parts || g0.info.parts.length < 2) return null;
+    // csak egyenesnél: könyök, átmenet, T-idom több darabból is egy testként, a modell valós alakjával jelenik meg (különben egyenes hasábokká torzulna)
+    if (e.t !== 'E') return null;
     // a darabolás a szabás szerinti hosszakból, de a test a modell (IFC) valós helyén: a modell hossztengelye mentén arányosan felosztva
     const parts = g0.info.parts, tot = parts.reduce((a, b) => a + b, 0); if (!tot) return null;
     const mesh = D.mesh && (D.mesh[e.mid] || (e.dmid && D.mesh[e.dmid])), nz = a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }, dot = (p, a) => p[0] * a[0] + p[1] * a[1] + p[2] * a[2];
@@ -14284,6 +14286,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     for (let k = 0; k < parts.length; k++) { const s0 = acc / tot * L, f0 = (acc + parts[k]) / tot * L; acc += parts[k]; const ta = rev ? t1 - f0 : t0 + s0, tb = rev ? t1 - s0 : t0 + f0, tc = (ta + tb) / 2, ht = (tb - ta) / 2, ha = (a1 - a0) / 2, hb = (b1 - b0) / 2;
       const c = [0, 1, 2].map(i => u[i] * tc + v[i] * ac + w[i] * bc); out.push({ part: k + 1, prs: Sheet.elemPrisms({ bx: [[...c, ...u.map(x => x * ht), ...v.map(x => x * ha), ...w.map(x => x * hb)]] }) }); }
     return out; };
+  try { Object.defineProperty(window, '__pgStat', { value: () => { const GG = allUnits().g, o = {}; for (const e of elsOf(NAMES)) { const g0 = e.on && GG.per.get(e.key); if (g0 && e.fr && g0.info && g0.info.parts && g0.info.parts.length > 1) o[e.t] = (o[e.t] || 0) + 1; } return o; }, configurable: true }); } catch (e) { }
   const dSt = r => { const t = trkOf(r.pid); return t.atveve ? 'atv' : t.szerelve ? 'sz' : 'no'; };
   const DTC = x => /füst/.test(x.t) ? '#7B3FA0' : '#C8372D';
   const dCol = r => ({ sz: '#3E9B5F', atv: '#1E5E38' })[dSt(r)] || DTC(r.x);
