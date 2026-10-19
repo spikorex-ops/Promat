@@ -161,18 +161,60 @@ textarea{width:100%;min-height:84px;font-family:var(--mono);font-size:13px}
 .chips label:has(input[type=radio]:checked){background:var(--accent);color:#fff}.chips label:has(input[type=radio]:checked) .mono{color:#fff}
 .chips input[type=radio]{position:absolute;opacity:0;pointer-events:none;width:0;height:0}
 .chips label .mono{color:var(--mute);font-size:12px}
+
+/* === v48 arculat: sötét menüoszlop ikonokkal, kártyás felület, egységes tipográfia === */
+:root{--bg:#EBEFF2;--panel2:#F5F7F9;--line:#D9E0E5;--accent:#0D6E78;--accent-soft:#DDF0F1;--ink:#14232C;--mute:#5B6C76;--r:10px;--side:#12222B;--side2:#1A2F3A;--sideink:#D5E1E6;--sidemute:#7D96A1;--glow:#4FD1C5;--sh:0 1px 2px rgba(20,35,44,.06),0 2px 8px rgba(20,35,44,.05)}
+body{background:var(--bg)}
+.card{border-radius:var(--r);box-shadow:var(--sh);border-color:#DCE3E8}
+.app{gap:14px;max-width:1640px}
+.top{margin:0 -16px;padding:10px 20px;border:0;background:linear-gradient(100deg,#0B3940 0%,#12222B 60%);color:#E8F1F3;border-radius:0 0 14px 14px;box-shadow:0 4px 16px rgba(10,30,38,.18)}
+.brand{align-items:center;gap:4px 12px;font-size:17px}.brand .logo{width:34px;height:34px;flex:none}.brand b{font-size:19px;letter-spacing:.01em}.brand .bt{display:flex;flex-direction:column;line-height:1.2}.brand .sub{color:#9CB7BF;font-size:12.5px}.brand .sub .mono{color:#C4D6DB}
+.topr{color:#C4D6DB}.topr .ver{color:#8FAAB3}.who{color:#9CB7BF}.who input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}.who input::placeholder{color:#8FAAB3}.who input[readonly]{background:transparent;border-color:transparent;font-weight:600;padding-left:0;width:auto}
+.topr .st{background:rgba(255,255,255,.08);border-radius:99px;padding:3px 10px}.topr .st span[style*="var(--ok)"]{color:#7EE2A8!important}.topr .st span[style*="var(--warn)"]{color:#FFC27A!important}
+.grid{grid-template-columns:248px minmax(0,1fr);gap:18px}
+/* menü */
+.nav{background:var(--side);border-color:var(--side);color:var(--sideink);padding:10px 8px;gap:1px;top:10px;max-height:calc(100vh - 20px);scrollbar-width:thin;scrollbar-color:#2C4552 transparent}
+.nav .ng{color:var(--sidemute);padding:14px 10px 6px;gap:8px;align-items:center;justify-content:flex-start;font-size:10.5px;letter-spacing:.09em}.nav .ng:first-child{padding-top:6px}
+.nav .ng::after{content:'';margin-left:auto;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.7}.nav .ng.closed::after{content:'';transform:rotate(-45deg)}
+.nav .ng svg{width:15px;height:15px;opacity:.85}.nav .ng:hover{color:#B9CCD3}
+.nav .ni{gap:10px;padding:7px 10px 7px 12px;border-radius:8px;font-size:13.5px;color:var(--sideink);position:relative;justify-content:flex-start}
+.nav .ni .nic{width:18px;height:18px;flex:none;display:inline-flex;color:#8FB0BB}.nav .ni .nic svg{width:18px;height:18px}
+.nav .ni .nil{flex:1;min-width:0;line-height:1.25}
+.nav .ni:hover{background:var(--side2);color:#fff}.nav .ni:hover .nic{color:#CFE3E8}
+.nav .ni[aria-current=true]{background:linear-gradient(90deg,rgba(79,209,197,.22),rgba(79,209,197,.08));color:#fff;font-weight:600}
+.nav .ni[aria-current=true]::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;border-radius:3px;background:var(--glow)}
+.nav .ni[aria-current=true] .nic{color:var(--glow)}
+.nav .ni b{background:#E0524A;color:#fff}.nav .ni[aria-current=true] b{background:#fff;color:var(--accent)}
+#navtog{background:var(--side)!important;color:#fff!important;border-color:var(--side)!important}
+/* lapfejléc */
+.ctx{padding:14px 18px;border-left:4px solid var(--accent)}.ctxl h1{font-size:21px;letter-spacing:-.01em}.ctxl .crumb{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);font-weight:600}
+/* vezérlők */
+button.b,select,input[type=number],input[type=text],input[type=search],textarea{border-radius:7px;border-color:#CCD5DB}
+button.b{transition:background .12s,border-color .12s,box-shadow .12s}button.b:hover{border-color:var(--accent);box-shadow:0 1px 3px rgba(13,110,120,.15)}
+button.b.pri:hover{filter:brightness(1.08)}
+.chips:has(input[type=radio]){border-radius:9px;background:#fff;box-shadow:var(--sh)}
+/* összesítő csempék */
+.tiles{gap:10px;background:none;border:0;overflow:visible}
+.tile{background:var(--panel);border:1px solid #DCE3E8;border-radius:var(--r);margin:0;box-shadow:var(--sh)}
+.tile.main{background:linear-gradient(135deg,#0D6E78,#0B4F57);border-color:#0B4F57}
+/* táblázatok */
+.tw{border-radius:var(--r);box-shadow:var(--sh);border-color:#DCE3E8}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;background:#F1F5F7;color:#5B6C76}
+tbody tr:hover td{background:#F7FAFB}
+tr.tot td{background:#EEF4F5}
+.toast{border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:10px 16px}
 </style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 
 <div class="app">
   <header class="top">
-    <div class="brand"><b>Promat</b> konszignáció és kivitelezés<span class="sub">EVE Debrecen · EL épület · <span id="hdBoard" class="mono"></span></span></div>
+    <div class="brand"><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="9" fill="#0D6E78"/><path d="M8 15h14a6 6 0 0 1 6 6v11" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><path d="M8 15h14a6 6 0 0 1 6 6v11" fill="none" stroke="#E2B04A" stroke-width="1.6" stroke-linejoin="round"/><circle cx="31" cy="9" r="3" fill="#4FD1C5"/></svg><div class="bt"><span><b>Promat</b> konszignáció és kivitelezés</span><span class="sub">EVE Debrecen · EL épület · <span id="hdBoard" class="mono"></span></span></div></div>
     <div class="topr"><span id="szstat" class="st"></span><label class="who">Rögzítő <input data-szn id="szname" placeholder="a te neved"></label><span class="ver"><span id="hdVer"></span> · adat: <span id="hdData"></span></span></div>
   </header>
   <div class="grid">
     <nav class="card nav" id="nav" aria-label="Menü"></nav>
     <main class="main">
       <div class="ctx card">
-        <div class="ctxl"><h1 id="pgTitle"></h1><span class="hint" id="pgSub"></span></div>
+        <div class="ctxl"><span class="crumb" id="pgCrumb"></span><h1 id="pgTitle"></h1><span class="hint" id="pgSub"></span></div>
         <div class="ctxr">
           <div class="picker" id="picker">
             <button class="b pick" id="sysbtn" aria-haspopup="true" aria-expanded="false"><span class="pl">Rendszer</span><b id="selName"></b><span class="car">▾</span></button>
@@ -13280,7 +13322,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v47 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v48 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14303,6 +14345,13 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     ['Nyilvántartás', [['k:hiba', 'Hibalista (átadás)'], ['k:akad', 'Akadályok'], ['k:elt', 'Eltérések a tervtől'], ['k:naplo', 'Műveletnapló']]],
     ['Beállítások', [['beall', 'Gyártási beállítások'], ['k:ceg', 'Szerelők és árak'], ['k:felh', 'Felhasználók és cégek'], ['k:ment', 'Mentések']]]];
   const NAVL = {}; NAV.forEach(g => g[1].forEach(([k, l]) => { NAVL[k] = l; }));
+  // v48: menüikonok (24×24, vonalas)
+  const IP = { list: 'M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01', clip: 'M9 4h6v3H9zM7 5H5v16h14V5h-2M8 12h8M8 16h5', file: 'M14 3H6v18h12V7zM14 3v4h4M9 13h6M9 17h6', cut: 'M6 6a2.5 2.5 0 1 0 0 .1M6 18a2.5 2.5 0 1 0 0 .1M8 7.5 20 18M8 16.5 20 6', sq: 'M4 4h16v16H4zM4 12h16M12 4v16', layers: 'M12 3 2 8l10 5 10-5zM2 13l10 5 10-5M2 18l10 5 10-5', qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h3v3h-3zM20 14v.01M17 20h3v-3', gauge: 'M12 14l4-4M3.5 17a9 9 0 1 1 17 0z', eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6', map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14', cube: 'M12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 12v10', check: 'M4 4h16v16H4zM8 12l3 3 5-6', pen: 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', route: 'M6 19a2 2 0 1 0 0-.1M18 5a2 2 0 1 0 0 .1M6 17V9a4 4 0 0 1 4-4h2M18 7v8a4 4 0 0 1-4 4h-2', cal: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3M13 14h3M8 17h3', box: 'M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8', report: 'M5 3h14v18H5zM9 8h6M9 12h6M9 16h3', sun: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5', cam: 'M3 8h4l2-3h6l2 3h4v12H3zM12 10.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7', cart: 'M3 4h2l2.5 11h11L21 7H7M9 20h.01M18 20h.01', sigma: 'M18 4H6l6 8-6 8h12', bars: 'M4 20V10M10 20V4M16 20v-7M22 20H2', sign: 'M3 17c3-4 5-8 7-8s-1 8 2 8 3-4 5-4 2 2 4 2M3 21h18', trend: 'M3 17l6-6 4 4 8-8M15 7h6v6', tick: 'M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z', table: 'M3 5h18v14H3zM3 10h18M3 15h18M9 5v14', rcpt: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6', users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6', flag: 'M5 21V4h11l-2 4 2 4H5', calm: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4', alert: 'M12 3 2 20h20zM12 10v4M12 17h.01', stop: 'M8 3h8l5 5v8l-5 5H8l-5-5V8zM8 12h8', ruler: 'M3 16 16 3l5 5L8 21zM7 12l2 2M10 9l2 2M13 6l2 2', hist: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2', gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z', brief: 'M3 7h18v13H3zM8 7V4h8v3M3 12h18', uplus: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M2 21v-1a6 6 0 0 1 12 0v1M19 8v6M16 11h6', save: 'M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7', fact: 'M3 21V10l6 4V10l6 4V4h6v17zM7 18h2M12 18h2M17 18h2', wrench: 'M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3zM14.7 6.3 18 3', coins: 'M8 8a5 2.5 0 1 0 0 .1M3 8v4c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V8M11 14.3c.9.4 2 .7 3 .7 2.8 0 5-1.1 5-2.5V8.5M14 9.5c2.8 0 5-1.1 5-2.5S16.8 4.5 14 4.5', arch: 'M3 4h18v4H3zM5 8v12h14V8M10 12h4' };
+  const NICO = { elemek: 'list', konsz: 'clip', lap: 'file', szabas: 'cut', felulet: 'sq', osszes: 'layers', 'k:gydash': 'gauge', 'k:hely': 'qr', 'k:dash': 'gauge', 'k:attek': 'eye', 'k:atnez': 'map', 'k:idom': 'cube', 'k:rogz': 'check', 'k:rajz': 'pen', 'k:eletut': 'route', 'k:utem': 'cal', 'k:keszlet': 'box', 'k:jelentes': 'report', 'k:napi': 'sun', 'k:foto': 'cam', 'k:anyag': 'cart', 'k:edash': 'gauge', 'k:fo': 'sigma', 'k:telj': 'bars', 'k:kimut': 'sign', 'k:fedezet': 'trend', 'k:tigell': 'tick', 'k:ossz': 'table', 'k:biz': 'rcpt', 'k:alv': 'users', 'k:kin': 'flag', 'k:havi': 'calm', 'k:hiba': 'alert', 'k:akad': 'stop', 'k:elt': 'ruler', 'k:naplo': 'hist', beall: 'gear', 'k:ceg': 'brief', 'k:felh': 'uplus', 'k:ment': 'save' };
+  const GICO = { 'Gyártás előkészítés': 'fact', 'Kivitelezés': 'wrench', 'Elszámolás': 'coins', 'Nyilvántartás': 'arch', 'Beállítások': 'gear' };
+  const svgI = k => IP[k] ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${IP[k]}"/></svg>` : '';
+  const NAVG = {}; NAV.forEach(g => g[1].forEach(([k]) => { NAVG[k] = g[0]; }));
+
   const PGSUB = { 'k:hely': 'QR-kód beolvasása telefonnal, darab rögzítése: legyártva, kiszállítva, felszerelve, fotó, hiba', 'k:felh': 'Ki léphet be, melyik cég mit rögzíthet, meghívók', elemek: 'A kiválasztott rendszer(ek) Promat elemei, méretek, módosítás', konsz: 'Anyagigény, vágási jegyzék, darabazonosítók, letöltések', lap: 'Gyártmányrajz idomonként, dosszié, címkék', szabas: 'Táblánkénti kiosztás, leesők, párhuzamos gyártás', felulet: 'Légcsatorna-felület képletei és ellenőrzése', osszes: 'Táblaigény és m² mind a 99 rendszerre', beall: 'Tábla, tok, merevítés, nyak, rajzstílus',
     'k:keszlet': 'Legyártott, de fel nem szerelt darabok tárolási hely szerint; maradék (hulladék) táblák nyilvántartása', 'k:jelentes': 'Heti / havi állapotjelentés egy kattintással: szerelés, gyártás, készlet, ütemek, akadályok – nyomtatható', 'k:utem': 'Következő ütemek előre: idomok kijelölése a terven, ütemenként lista, m², készültség, nyomtatható gyűjtés', 'k:kimut': 'Ki mit szerelt (gyártott): cég, brigád, rendszer, időszak szerint – tételes lista, nyomtatható teljesítési kimutatás aláíráshoz', 'k:telj': 'Felszerelt m² havonta: kínai igazolás szerint és cégenként (Baranyi csak ők / közösen)', 'k:attek': 'A teljes projekt készültsége, tempó, havi szerelés', 'k:atnez': 'Az épület alaprajza: terv, legyártva, felszerelve, ki gyártotta, ki szerelte', 'k:idom': 'Minden idomnál: ki gyártotta, kinek, ki szerelte, mikor', 'k:rogz': 'Sok darab egyszerre, szűrőkkel (pl. kezdő állapot)', 'k:rajz': 'A rendszer rajza állapotszínekkel, kattintásos kijelöléssel', 'k:eletut': 'Egy darab teljes története azonosító vagy QR alapján', 'k:napi': 'Létszám, munkaóra, felszerelt mennyiség naponta', 'k:dash': 'A projekt egy pillantásra: m², gyártás, szerelés, alapanyag, cégek, havi tempó, nyitott ügyek, rendszerenként', 'k:anyag': 'Az ütemterv következő heteihez szükséges táblák és fogyóanyag, készlet levonva, rendelési javaslat raklapra kerekítve', 'k:fedezet': 'Bevétel (kínai TIG egységár) − alvállalkozó − saját munka − anyag, rendszerenként; a veszteséges rendszerek elöl', 'k:tigell': 'Alvállalkozói TIG-ek, számlák és kínai igazolások automatikus ellenőrzése: összeg, egységár, mennyiség a programhoz, számla ↔ TIG', 'k:foto': 'Gyártás, szerelés, átvétel, hiba fotói idomonként – offline is rögzít; lefedettség, fotódokumentáció', 'k:hiba': 'Hibák idomonként: felelős, határidő, javítás, ellenőrzés, fotó – nyomtatható átadási hibalista',
     'k:fo': 'Mennyiség és pénz egy helyen: terv, gyártás, szerelés, kínai igazolás, alvállalkozók', 'k:ossz': 'Alvállalkozónként: program, TIG, nyilvántartás, számlák, figyelmeztetések', 'k:biz': 'Számlák, teljesítésigazolások, kimutatások tételesen', 'k:alv': 'Elszámolás a rögzített darabokból, árlista szerint', 'k:kin': 'A kínai fél havi teljesítésigazolásai tételesen, euróban', 'k:havi': 'Hónap × szerelő, kontroll a kínai igazolással',
@@ -14314,12 +14363,12 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const nav = document.getElementById('nav'); if (!nav) return; const cur = curPg();
     const nOpen = Object.values(PROB).filter(p => p && p.status !== 'megoldva').length, unpaid = Object.values(ALVB).filter(b => b && b.tipus === 'szamla' && !b.fizD && b.statusz !== 'kifizetve').length;
     const badge = k => k === 'k:akad' && nOpen ? `<b>${nOpen}</b>` : k === 'k:biz' && unpaid ? `<b style="background:var(--warn)">${unpaid}</b>` : k === 'k:ment' && PQ.length ? `<b style="background:var(--warn)">${PQ.length}</b>` : '';
-    let h = ''; for (const [g, items0] of NAV) { const items = items0.filter(i => navOk(i[0])); if (!items.length) continue; const closed = NAVC[g] === 0 && !items.some(i => i[0] === cur); h += `<div class="ng${closed ? ' closed' : ''}" data-ng="${esc(g)}">${g}</div>`; if (!closed) h += items.map(([k, l]) => `<button class="ni" data-nav="${k}" aria-current="${cur === k}">${l}${badge(k)}</button>`).join(''); }
+    let h = ''; for (const [g, items0] of NAV) { const items = items0.filter(i => navOk(i[0])); if (!items.length) continue; const closed = NAVC[g] === 0 && !items.some(i => i[0] === cur); h += `<div class="ng${closed ? ' closed' : ''}" data-ng="${esc(g)}">${svgI(GICO[g])}<span>${g}</span></div>`; if (!closed) h += items.map(([k, l]) => `<button class="ni" data-nav="${k}" aria-current="${cur === k}"><span class="nic">${svgI(NICO[k])}</span><span class="nil">${l}</span>${badge(k)}</button>`).join(''); }
     nav.innerHTML = h; navMob(nav, cur);
   }
   function renderCtx() {
     const cur = curPg(), t = document.getElementById('pgTitle'); if (!t) return;
-    t.textContent = NAVL[cur] || ''; document.getElementById('pgSub').textContent = PGSUB[cur] || '';
+    t.textContent = NAVL[cur] || ''; document.getElementById('pgSub').textContent = PGSUB[cur] || ''; { const c = document.getElementById('pgCrumb'); if (c) c.textContent = NAVG[cur] || ''; }
     document.getElementById('picker').style.display = PICK.has(cur) ? '' : 'none';
     const prep = PREP.has(cur); document.getElementById('tiles').style.display = prep ? '' : 'none'; const sl = document.querySelector('.selline'); if (sl) sl.style.display = prep ? '' : 'none';
     document.getElementById('ctxAct').innerHTML = cur.startsWith('k:') && DL ? '<button class="b" data-sz="xlsx">Szerelés Excelben ⤓</button>' : '';
