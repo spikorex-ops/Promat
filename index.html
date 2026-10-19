@@ -240,6 +240,36 @@ tr.tot td{background:#EEF4F5}
   .nmbar svg{width:20px;height:20px;flex:none;opacity:.9}.nmbar b{flex:1;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .nmbar span{flex:none;font-weight:700;font-size:14px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,.12)}
 }
+
+/* v66: telefonos (helyszíni) nézet – csak ha a készüléken ezt választották (body.tel); az asztali nézetet nem érinti */
+.modsw{font:600 12px var(--sans,system-ui);background:rgba(255,255,255,.12);color:#E8F1F3;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+body.tel .modsw{display:none}
+@media (max-width:980px){body:not(.tel) .top .ver{display:none}.modsw{font-size:11px;padding:3px 8px}}
+#modpick{position:fixed;inset:0;z-index:9800;background:rgba(10,24,30,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#modpick .mpbox{background:#fff;border-radius:14px;max-width:520px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+#modpick h2{margin:0;font-size:19px}
+#modpick .mpc{display:flex;flex-direction:column;gap:4px;text-align:left;padding:16px;border:2px solid #D5DCE1;border-radius:12px;background:#F7FAFB;cursor:pointer;font:inherit;color:inherit}
+#modpick .mpc b{font-size:17px}#modpick .mpc span{color:#5D6B74;font-size:13.5px}#modpick .mpc i{font-style:normal;font-size:12px;font-weight:700;color:#0E6B74}
+#modpick .mpc.rec{border-color:#0E6B74;background:#EAF4F4}
+body.tel .grid{grid-template-columns:minmax(0,1fr)!important;max-width:680px;margin:0 auto}
+body.tel #nav{display:none!important}
+body.tel .top{padding:6px 12px 7px;gap:4px 10px;border-radius:0 0 10px 10px;flex-wrap:nowrap}
+body.tel .top .logo{width:28px;height:28px}body.tel .top .bt span:first-child i,body.tel .top .bt .sub,body.tel .top .who{display:none}
+body.tel .top .ver{font-size:10.5px;opacity:.75}body.tel .top #szstat{font-size:11.5px;padding:2px 8px}
+body.tel .ctx{padding:8px 12px!important}body.tel .ctx #pgSub,body.tel #ctxAct,body.tel .ctx .crumb{display:none}body.tel .ctx h1{font-size:19px!important;margin:0!important}
+body.tel .main{padding-bottom:84px}
+#telbar{position:fixed;left:0;right:0;bottom:0;z-index:9500;display:flex;background:#12222B;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.25)}
+#telbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;border:0;color:#AFC2CB;font:600 12px var(--sans,system-ui);padding:6px 2px;border-radius:10px;cursor:pointer;min-height:56px}
+#telbar button svg{width:24px;height:24px}#telbar button.on{color:#fff;background:rgba(79,209,197,.18)}
+#telmore{position:fixed;left:8px;right:8px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:9501;background:#fff;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.35);padding:8px;display:flex;flex-direction:column;gap:6px;max-width:664px;margin:0 auto}
+#telmore button{min-height:52px;text-align:left;padding:10px 14px;border:1px solid #D5DCE1;border-radius:10px;background:#F7FAFB;font:600 15px var(--sans,system-ui);color:#1F2D36;cursor:pointer}
+#telmore button.sec{background:#fff;color:#5D6B74;font-weight:500}
+body.tel #puser{position:static;margin:14px 0 6px;border-radius:10px;justify-content:space-between;box-shadow:none;max-width:none}
+body.tel .hsts{grid-template-columns:1fr 1fr!important;gap:4px!important}body.tel .hst{padding:3px 6px!important;font-size:12px!important}
+body.tel .ic-b{grid-template-columns:minmax(0,1fr)!important}body.tel .ic-s{flex-wrap:wrap}body.tel .ic-t{min-width:0;flex-basis:100%}body.tel .ic-p{margin-left:6px}
+body.tel .ic-r select,body.tel .ic-r input:not([type=checkbox]){max-width:none;flex:1 1 130px}body.tel .ic-r input[type=checkbox]{width:22px;height:22px}
+body.tel .elpop{left:8px!important;right:8px;width:auto!important;bottom:84px}
+body.tel .hbig{min-height:58px;font-size:17px}
 </style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 
 <div class="app">
@@ -566,7 +596,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const d = document.createElement('div'); d.id = 'pupd'; d.innerHTML = 'Új programverzió – magától frissül, amint befejezed, amit csinálsz. <button>Most</button>'; d.querySelector('button').onclick = () => location.reload(); document.body.appendChild(d);
       tryReload(); setInterval(tryReload, 15000); });
     const check = () => { const c = navigator.serviceWorker.controller; if (c && navigator.onLine !== false) c.postMessage('ellenoriz'); };
-    setInterval(check, 10 * 60 * 1000); document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); else check(); });
+    setInterval(check, 60 * 1000); window.addEventListener("focus", check); window.addEventListener("pageshow", check); document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); else check(); });
   }
   window.addEventListener('hashchange', () => { if (/[#&]m=/.test(location.hash)) location.reload(); });
   window.__promatBoot = { start, b64e, b64d };
@@ -13400,7 +13430,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v65 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v66 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14440,6 +14470,29 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     ['Beállítások', [['beall', 'Gyártási beállítások'], ['k:ceg', 'Szerelők és árak'], ['k:felh', 'Felhasználók és cégek'], ['k:aktiv', 'Belépések és használat'], ['k:ment', 'Mentések']]]];
   const NAVL = {}; NAV.forEach(g => g[1].forEach(([k, l]) => { NAVL[k] = l; }));
   let NAVMO = false; // v65: telefonos menü nyitva?
+  /* ---------- v66: TELEFONOS (helyszíni) NÉZET – külön üzemmód, az elején választható, a készülék megjegyzi ---------- */
+  let TEL = false; try { TEL = localStorage.getItem('promat-mod') === 'tel'; } catch (e) { }
+  const TELK = ['k:hely', 'k:idom', 'k:hiba', 'k:foto', 'k:naplo', 'k:eletut', 'k:atnez'];
+  const TELTAB = [['k:hely', 'Beolvasás', 'qr'], ['k:idom', 'Rendszer', 'cube'], ['k:hiba', 'Hibák', 'warn'], ['__tobb', 'Több', 'menu']];
+  let TELMORE = false;
+  function modSet(m) { try { localStorage.setItem('promat-mod', m); } catch (e) { } TEL = m === 'tel'; TELMORE = false; document.body.classList.toggle('tel', TEL); if (TEL) { S.tab = 'kovet'; KV = 'hely'; } const o = document.getElementById('modpick'); if (o) o.remove(); renderPane(); window.scrollTo(0, 0); }
+  function modPick() { if (document.getElementById('modpick')) return; const o = document.createElement('div'); o.id = 'modpick';
+    const mob = window.matchMedia && window.matchMedia('(max-width: 980px)').matches;
+    o.innerHTML = `<div class="mpbox"><h2>Melyik nézetet használod ezen a készüléken?</h2><p class="hint">A készülék megjegyzi; később a „Több” menüben (telefonos) vagy a fejlécben (asztali) válthatsz.</p>
+      <button class="mpc${mob ? ' rec' : ''}" data-mod="tel"><b>📱 Telefonos – helyszíni</b><span>QR-beolvasás, gyors rögzítés, nagy gombok, fotó, hiba. Építkezésen, telefonon.</span>${mob ? '<i>ajánlott ezen a készüléken</i>' : ''}</button>
+      <button class="mpc${mob ? '' : ' rec'}" data-mod="asztal"><b>🖥 Asztali – teljes program</b><span>Minden oldal: gyártás, kivitelezés, elszámolás, kimutatások, beállítások.</span>${mob ? '' : '<i>ajánlott ezen a készüléken</i>'}</button></div>`;
+    document.body.appendChild(o); }
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-mod]'); if (b) { ev.preventDefault(); ev.stopPropagation(); modSet(b.dataset.mod); return; }
+    const t = ev.target.closest && ev.target.closest('[data-teltab]'); if (t) { ev.preventDefault(); ev.stopPropagation(); const k = t.dataset.teltab; if (k === '__tobb') { TELMORE = !TELMORE; telBar(); return; } TELMORE = false; S.tab = 'kovet'; KV = k.slice(2); save(); fmSave(); renderPane(); window.scrollTo(0, 0); } }, true);
+  setTimeout(() => { try { if (window.__SB && !localStorage.getItem('promat-mod')) modPick(); } catch (e) { }
+    const tr = document.querySelector('.top .topr'); if (tr && !document.getElementById('modsw')) { const b = document.createElement('button'); b.id = 'modsw'; b.className = 'modsw'; b.dataset.mod = 'tel'; b.title = 'Telefonos (helyszíni) nézetre váltás'; b.textContent = '📱 Telefonos nézet'; tr.insertBefore(b, tr.firstChild); } }, 0);
+  function telBar() { let b = document.getElementById('telbar'); if (!TEL) { if (b) b.remove(); const m = document.getElementById('telmore'); if (m) m.remove(); return; }
+    if (!b) { b = document.createElement('nav'); b.id = 'telbar'; document.body.appendChild(b); } const cur = curPg();
+    const TI = { qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z', cube: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5', warn: 'M12 4l9 16H3zM12 10v4M12 17v.5', menu: 'M4 7h16M4 12h16M4 17h16' };
+    b.innerHTML = TELTAB.filter(([k]) => k === '__tobb' || navOk(k)).map(([k, l, ic]) => `<button data-teltab="${k}" class="${(k === cur && !TELMORE) || (k === '__tobb' && TELMORE) ? 'on' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="${TI[ic]}"/></svg><span>${l}</span></button>`).join('');
+    let m = document.getElementById('telmore'); if (!TELMORE) { if (m) m.remove(); return; } if (!m) { m = document.createElement('div'); m.id = 'telmore'; document.body.appendChild(m); }
+    const more = [['k:foto', '📷 Fotók'], ['k:eletut', '🔎 Darab életút'], ['k:naplo', '🕘 Saját rögzítéseim (napló)'], ['k:atnez', '🗺 Nagy átnézet (tervrajz) – nehéz, lassú lehet']].filter(([k]) => navOk(k));
+    m.innerHTML = more.map(([k, l]) => `<button data-teltab="${k}">${l}</button>`).join('') + `<button data-mod="asztal" class="sec">🖥 Váltás asztali nézetre</button>` + (document.getElementById('pout') ? `<button class="sec" onclick="document.getElementById('pout').click()">Kilépés</button>` : ''); }
   // v48: menüikonok (24×24, vonalas)
   const IP = { list: 'M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01', clip: 'M9 4h6v3H9zM7 5H5v16h14V5h-2M8 12h8M8 16h5', file: 'M14 3H6v18h12V7zM14 3v4h4M9 13h6M9 17h6', cut: 'M6 6a2.5 2.5 0 1 0 0 .1M6 18a2.5 2.5 0 1 0 0 .1M8 7.5 20 18M8 16.5 20 6', sq: 'M4 4h16v16H4zM4 12h16M12 4v16', layers: 'M12 3 2 8l10 5 10-5zM2 13l10 5 10-5M2 18l10 5 10-5', qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h3v3h-3zM20 14v.01M17 20h3v-3', gauge: 'M12 14l4-4M3.5 17a9 9 0 1 1 17 0z', eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6', map: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14', cube: 'M12 2 3 7v10l9 5 9-5V7zM3 7l9 5 9-5M12 12v10', check: 'M4 4h16v16H4zM8 12l3 3 5-6', pen: 'M4 20h4L19 9l-4-4L4 16zM13 7l4 4', route: 'M6 19a2 2 0 1 0 0-.1M18 5a2 2 0 1 0 0 .1M6 17V9a4 4 0 0 1 4-4h2M18 7v8a4 4 0 0 1-4 4h-2', cal: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M8 14h3M13 14h3M8 17h3', box: 'M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8', report: 'M5 3h14v18H5zM9 8h6M9 12h6M9 16h3', sun: 'M5 3h14v18H5zM8 7h8M8 11h8M8 15h5', cam: 'M3 8h4l2-3h6l2 3h4v12H3zM12 10.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7', cart: 'M3 4h2l2.5 11h11L21 7H7M9 20h.01M18 20h.01', sigma: 'M18 4H6l6 8-6 8h12', bars: 'M4 20V10M10 20V4M16 20v-7M22 20H2', sign: 'M3 17c3-4 5-8 7-8s-1 8 2 8 3-4 5-4 2 2 4 2M3 21h18', trend: 'M3 17l6-6 4 4 8-8M15 7h6v6', tick: 'M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z', table: 'M3 5h18v14H3zM3 10h18M3 15h18M9 5v14', rcpt: 'M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6', users: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M2 21v-1a6 6 0 0 1 12 0v1M16 3.5a4 4 0 0 1 0 7.5M22 21v-1a6 6 0 0 0-4-5.6', flag: 'M5 21V4h11l-2 4 2 4H5', calm: 'M4 6h16v15H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4', alert: 'M12 3 2 20h20zM12 10v4M12 17h.01', stop: 'M8 3h8l5 5v8l-5 5H8l-5-5V8zM8 12h8', ruler: 'M3 16 16 3l5 5L8 21zM7 12l2 2M10 9l2 2M13 6l2 2', hist: 'M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2', gear: 'M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z', brief: 'M3 7h18v13H3zM8 7V4h8v3M3 12h18', uplus: 'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M2 21v-1a6 6 0 0 1 12 0v1M19 8v6M16 11h6', save: 'M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7', fact: 'M3 21V10l6 4V10l6 4V4h6v17zM7 18h2M12 18h2M17 18h2', wrench: 'M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3zM14.7 6.3 18 3', coins: 'M8 8a5 2.5 0 1 0 0 .1M3 8v4c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V8M11 14.3c.9.4 2 .7 3 .7 2.8 0 5-1.1 5-2.5V8.5M14 9.5c2.8 0 5-1.1 5-2.5S16.8 4.5 14 4.5', arch: 'M3 4h18v4H3zM5 8v12h14V8M10 12h4' };
   const NICO = { elemek: 'list', konsz: 'clip', lap: 'file', szabas: 'cut', felulet: 'sq', osszes: 'layers', 'k:gydash': 'gauge', 'k:hely': 'qr', 'k:dash': 'gauge', 'k:attek': 'eye', 'k:atnez': 'map', 'k:idom': 'cube', 'k:rogz': 'check', 'k:rajz': 'pen', 'k:eletut': 'route', 'k:utem': 'cal', 'k:keszlet': 'box', 'k:jelentes': 'report', 'k:napi': 'sun', 'k:foto': 'cam', 'k:anyag': 'cart', 'k:edash': 'gauge', 'k:fo': 'sigma', 'k:telj': 'bars', 'k:kimut': 'sign', 'k:fedezet': 'trend', 'k:tigell': 'tick', 'k:ossz': 'table', 'k:biz': 'rcpt', 'k:alv': 'users', 'k:kin': 'flag', 'k:havi': 'calm', 'k:hiba': 'alert', 'k:akad': 'stop', 'k:elt': 'ruler', 'k:naplo': 'hist', beall: 'gear', 'k:ceg': 'brief', 'k:felh': 'uplus', 'k:aktiv': 'hist', 'k:ment': 'save' };
@@ -14455,7 +14508,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   let NAVC = {}; try { NAVC = JSON.parse(localStorage.getItem('promat-navc') || '{}') || {}; } catch (e) { }
   const curPg = () => S.tab === 'kovet' ? 'k:' + KV : S.tab;
   function renderNav() {
-    const nav = document.getElementById('nav'); if (!nav) return; const cur = curPg();
+    const nav = document.getElementById('nav'); if (!nav) return; document.body.classList.toggle('tel', TEL); telBar(); if (TEL) { nav.innerHTML = ''; return; } const cur = curPg();
     const nOpen = Object.values(PROB).filter(p => p && p.status !== 'megoldva').length, unpaid = Object.values(ALVB).filter(b => b && b.tipus === 'szamla' && !b.fizD && b.statusz !== 'kifizetve').length;
     const badge = k => k === 'k:akad' && nOpen ? `<b>${nOpen}</b>` : k === 'k:biz' && unpaid ? `<b style="background:var(--warn)">${unpaid}</b>` : k === 'k:ment' && PQ.length ? `<b style="background:var(--warn)">${PQ.length}</b>` : '';
     const GCOL = { 'Gyártás előkészítés': '#E2B04A', 'Kivitelezés': '#3E9B5F', 'Elszámolás': '#5E9BD8', 'Nyilvántartás': '#E07A4A', 'Beállítások': '#9AA9B2' }, GSH = { 'Gyártás előkészítés': 'Gyártás', 'Kivitelezés': 'Kivitelezés', 'Elszámolás': 'Elszámolás', 'Nyilvántartás': 'Nyilvántartás', 'Beállítások': 'Beállítás' };
@@ -15695,7 +15748,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     // legalább egy oldal maradjon: ha mindent kikapcsoltak, a Helyszín oldal látszik
     return k === 'k:hely' && !NAV.some(g => g[1].some(([x]) => x !== k && navBase(x, ROLE(), CINF()) && !T.includes(x)));
   }
-  function navGuard() { const cur = S.tab === 'kovet' ? 'k:' + KV : S.tab; if (navOk(cur)) return; let first = 'k:hely'; if (!navOk(first)) for (const g of NAV) { const f = g[1].find(([x]) => navOk(x)); if (f) { first = f[0]; break; } }
+  function navGuard() { const cur = S.tab === 'kovet' ? 'k:' + KV : S.tab; if (TEL && !TELK.includes(cur)) { S.tab = 'kovet'; KV = 'hely'; return; } if (navOk(cur)) return; let first = 'k:hely'; if (!navOk(first)) for (const g of NAV) { const f = g[1].find(([x]) => navOk(x)); if (f) { first = f[0]; break; } }
     if (first.startsWith('k:')) { S.tab = 'kovet'; KV = first.slice(2); } else S.tab = first; }
 
 
