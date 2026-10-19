@@ -13387,7 +13387,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v62 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v63 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14136,7 +14136,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const ref = TDB.collection(o.col).doc(o.id);
     if (o.k === 'set') return ref.set(o.data);
     if (o.k === 'del') return ref.delete();
-    if (o.k === 'sz') { try { await ref.update({ p: o.data.p }); } catch (e) { if (e && e.code === 'invalid_argument') { const cur = await ref.get(), base = cur.exists ? (cur.data() || {}) : { p: {} }, p = Object.assign({}, base.p || {}); for (const [k, v] of Object.entries(o.data.p)) p[k] = Object.assign({}, p[k] || {}, v); await ref.set({ sys: o.data.sys, p }); } else throw e; } }
+    if (o.k === 'sz') { try { await ref.update({ sys: o.data.sys, p: o.data.p }); } catch (e) { if (e && e.code === 'invalid_argument') { const cur = await ref.get(), base = cur.exists ? (cur.data() || {}) : { p: {} }, p = Object.assign({}, base.p || {}); for (const [k, v] of Object.entries(o.data.p)) p[k] = Object.assign({}, p[k] || {}, v); await ref.set({ sys: o.data.sys, p }); } else throw e; } }
   }
   async function flush() {
     if (DBSTATE !== 'on' || FLUSHING) return; FLUSHING = true; clearTimeout(FLT);
@@ -14270,7 +14270,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         TDB = db; DBSTATE = 'on'; NAPLO = {};
         const sub = (col, fn, q) => (q || db.collection(col)).onSnapshot(snap => { const m = {}; for (const d of snap.docs) { const x = d.data(); if (x) m[d.id] = x; } fn(m); LOADED.add(col); cacheSave(col); autoBackup(); }, () => { });
         const pend = col => PQ.filter(o => o.col === col); // a még függő saját írások ne tűnjenek el a frissítéskor
-        sub('szereles', m => { SZDOC = {}; for (const x of Object.values(m)) if (x && x.sys) SZDOC[x.sys] = x; for (const o of pend('szereles')) applyLocal(o); trkRebuild(); szRefresh(); });
+        sub('szereles', m => { SZDOC = {}; for (const [id, x] of Object.entries(m)) if (x && (x.sys || x.p)) { const sy = x.sys || id; SZDOC[sy] = x.sys ? x : Object.assign({ sys: sy }, x); } for (const o of pend('szereles')) applyLocal(o); trkRebuild(); szRefresh(); });
         const plain = (col, setF, keyF) => sub(col, m => { const o = {}; for (const [id, x] of Object.entries(m)) o[keyF ? keyF(x, id) : id] = x; if (!Object.keys(o).length && SEED[col]) for (const [k, v] of Object.entries(SEED[col])) o[k] = JSON.parse(JSON.stringify(v)); setF(o); for (const q of pend(col)) applyLocal(q); if (col === 'szerelok') SZL = null; if (col === 'problemak') renderSys(); szRefresh(); });
         plain('szerelok', v => { SZEREL = v; }, (x, id) => x.id || id); plain('napi', v => { NAPI = v; }, (x, id) => x.id || id); plain('igazolas', v => { IGAZ = v; }, (x, id) => x.ho || id);
         plain('problemak', v => { PROB = v; for (const [id, x] of Object.entries(PROB)) if (!x.id) x.id = id; }, (x, id) => x.id || id);
