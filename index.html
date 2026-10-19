@@ -3193,7 +3193,7 @@ const Sheet = (() => {
 })();
 
 
-/* QR-kód (ISO/IEC 18004): bájt mód, M hibajavítás, 1–10. verzió, maszk kiválasztás büntetőpontokkal. Saját, függőség nélküli kódoló. */
+/* QR-kód (ISO/IEC 18004): bájt mód, M hibajavítás, 1–15. verzió, maszk kiválasztás büntetőpontokkal. Saját, függőség nélküli kódoló. */
 const QR = (() => {
   // GF(256), p(x) = x^8+x^4+x^3+x^2+1
   const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
@@ -3205,14 +3205,17 @@ const QR = (() => {
   // verziótábla (M szint): [összes kódszó, EC kódszó blokkonként, [blokkszám, adat kódszó/blokk]…, igazító minták]
   const V = [null,
     [26, 10, [[1, 16]], []], [44, 16, [[1, 28]], [6, 18]], [70, 26, [[1, 44]], [6, 22]], [100, 18, [[2, 32]], [6, 26]], [134, 24, [[2, 43]], [6, 30]],
-    [172, 16, [[4, 27]], [6, 34]], [196, 18, [[4, 31]], [6, 22, 38]], [242, 22, [[2, 38], [2, 39]], [6, 24, 42]], [292, 22, [[3, 36], [2, 37]], [6, 26, 46]], [346, 26, [[4, 43], [1, 44]], [6, 28, 50]]];
+    [172, 16, [[4, 27]], [6, 34]], [196, 18, [[4, 31]], [6, 22, 38]], [242, 22, [[2, 38], [2, 39]], [6, 24, 42]], [292, 22, [[3, 36], [2, 37]], [6, 26, 46]], [346, 26, [[4, 43], [1, 44]], [6, 28, 50]],
+    [404, 30, [[1, 50], [4, 51]], [6, 30, 54]], [466, 22, [[6, 36], [2, 37]], [6, 32, 58]], [532, 22, [[8, 37], [1, 38]], [6, 34, 62]],
+    [581, 24, [[4, 40], [5, 41]], [6, 26, 46, 66]], [655, 24, [[5, 41], [5, 42]], [6, 26, 48, 70]]];
   const FMT = [0x5412, 0x5125, 0x5E7C, 0x5B4B, 0x45F9, 0x40CE, 0x4F97, 0x4AA0]; // M szint, 0–7 maszk
-  const VINFO = { 7: 0x07C94, 8: 0x085BC, 9: 0x09A99, 10: 0x0A4D3 };
+  // verzióinformáció (7+): 6 bit verzió + 12 bit BCH (generátor 0x1F25)
+  const VINFO = {}; for (let v = 7; v <= 15; v++) { let r = v << 12; for (let i = 17; i >= 12; i--) if (r >> i & 1) r ^= 0x1F25 << (i - 12); VINFO[v] = v << 12 | r; }
   const utf8 = s => { const o = []; for (const ch of s) { let c = ch.codePointAt(0); if (c < 0x80) o.push(c); else if (c < 0x800) o.push(0xC0 | c >> 6, 0x80 | c & 63); else if (c < 0x10000) o.push(0xE0 | c >> 12, 0x80 | c >> 6 & 63, 0x80 | c & 63); else o.push(0xF0 | c >> 18, 0x80 | c >> 12 & 63, 0x80 | c >> 6 & 63, 0x80 | c & 63); } return o; };
   function encode(text) {
     const bytes = utf8(text);
     let ver = 0, cap = 0;
-    for (let v = 1; v <= 10; v++) { const t = V[v], dc = t[2].reduce((s, b) => s + b[0] * b[1], 0); cap = dc - (v <= 9 ? 2 : 3); if (bytes.length <= cap) { ver = v; break; } }
+    for (let v = 1; v <= 15; v++) { const t = V[v], dc = t[2].reduce((s, b) => s + b[0] * b[1], 0); cap = dc - (v <= 9 ? 2 : 3); if (bytes.length <= cap) { ver = v; break; } }
     if (!ver) throw new Error('QR: túl hosszú szöveg (' + bytes.length + ' bájt)');
     const t = V[ver], dcw = t[2].reduce((s, b) => s + b[0] * b[1], 0);
     // bitfolyam: mód 0100, hossz (8 vagy 16 bit), adat, lezáró, kitöltés
@@ -13382,7 +13385,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v59 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v60 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -13675,6 +13678,20 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   }
   // egy kész darab légcsatorna-felülete: egyenesnél a darabhossz arányában
   const pidM2 = (el, u) => { const A = Core.ductArea(el, S.P); return (u && u.L != null && el.L && (el.t === 'E' || el.t === 'T' || el.t === 'Y') && u.np > 1) ? A * u.L / el.L : A; };
+  // v60: a darab QR-kódjának tartalma – telefon kamerájával olvasva rendezett adatlap, alatta link a programba (a darabnál nyílik meg)
+  const QRBASE = 'https://spikorex-ops.github.io/Promat/';
+  function qrTxt(el, u, pid, dm) {
+    const L = ['PROMAT · EVE Debrecen, EL épület', 'Azonosító: ' + pid + (u.np > 1 ? ` (${u.part}/${u.np}. darab)` : ''), 'Rendszer: ' + el.sys + ' · ' + el.n + '. elem',
+      'Típus: ' + Core.typeName(el) + (el.t === 'K' && el.ang ? ', ' + el.ang + '°' : ''), 'Méret: ' + Core.sizeText(el) + ' mm' + (u.L != null ? ' · hossz ' + u.L + ' mm' : ''), 'Felület: ' + nf(dm, 2) + ' m²'];
+    const hely = [el.lv ? 'szint ' + el.lv : '', el.ax ? 'tengely ' + el.ax : '', !el.manual && el.z0 != null ? 'magasság ' + zTxt0(el) + ' m' : ''].filter(Boolean);
+    if (hely.length) L.push('Hely: ' + hely.join(' · '));
+    L.push('Anyag: PROMATECT-L500, ' + S.P.t + ' mm');
+    if (!el.manual && el.id) L.push('Revit ID: ' + el.id);
+    L.push(QRBASE + '#d=' + encodeURIComponent(pid));
+    let t = L.join('\n'); if (new TextEncoder().encode(t).length > 400) t = [L[0], L[1], L[3], L[4], L[L.length - 1]].join('\n'); // biztonsági tartalék: max. 15. verziós QR
+    return t;
+  }
+  try { Object.defineProperty(window, '__qrs', { value: () => idRows(NAMES).map(r => r.qr) }); } catch (e) { }
   // kész darabok azonosítói
   const zTxt0 = el => (el.z0 >= 0 ? '+' : '') + nf(el.z0, 1) + '…' + (el.z1 >= 0 ? '+' : '') + nf(el.z1, 1);
   function idRows(syss, GG) {
@@ -13682,7 +13699,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     for (const el of elsOf(syss || S.sel)) { if (!el.on) continue; const g = GG.per.get(el.key); if (!g || !g.pieces.length) continue; const q = Math.max(1, (S.ov[el.key] && S.ov[el.key].qty) || 1);
       for (const u of Core.unitsOf(el, g)) for (let c = 1; c <= q; c++) {
         const pcs = g.pieces.filter(p => p.pid === u.pid), marks = [...new Set(pcs.map(p => p.mark))].join(' ');
-        out.push({ el, kerd: isKerd(el), dm: pidM2(el, u), fm: el.t === 'E' && u.L != null ? u.L / 1000 : 0, pid: u.pid + (q > 1 ? '/' + c : ''), sys: el.sys, n: el.n, part: u.part, np: u.np, type: Core.typeName(el), size: Core.sizeText(el), L: u.L != null ? u.L : (el.t === 'K' ? el.ang + '°' : ''), ax: el.ax || '', lv: el.lv || '', z: el.manual ? '' : zTxt0(el), marks, npc: pcs.length, tok: pcs.filter(p => p.kind === 'tok').length, mer: pcs.filter(p => p.kind === 'mer').length, mod: el.mod, rid: el.manual ? '' : el.id, qr: [PROJ, u.pid + (q > 1 ? '/' + c : ''), el.manual ? 'kezi' : el.id, Core.typeName(el), Core.sizeText(el).replace(/\s/g, ''), u.L != null ? 'L' + u.L : (el.t === 'K' ? el.ang + 'fok' : '')].join('|') });
+        out.push({ el, kerd: isKerd(el), dm: pidM2(el, u), fm: el.t === 'E' && u.L != null ? u.L / 1000 : 0, pid: u.pid + (q > 1 ? '/' + c : ''), sys: el.sys, n: el.n, part: u.part, np: u.np, type: Core.typeName(el), size: Core.sizeText(el), L: u.L != null ? u.L : (el.t === 'K' ? el.ang + '°' : ''), ax: el.ax || '', lv: el.lv || '', z: el.manual ? '' : zTxt0(el), marks, npc: pcs.length, tok: pcs.filter(p => p.kind === 'tok').length, mer: pcs.filter(p => p.kind === 'mer').length, mod: el.mod, rid: el.manual ? '' : el.id, qr: qrTxt(el, u, u.pid + (q > 1 ? '/' + c : ''), pidM2(el, u)) });
       } }
     return out;
   }
@@ -15671,12 +15688,19 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   /* ---------- Helyszín: QR-kód beolvasása → a darab → Legyártva / Kiszállítva / Felszerelve / Fotó / Hiba ---------- */
   let HELY = { pid: '', q: '', err: '', ceg: '' };
   const helyCeg = () => ISADM() ? (HELY.ceg || 'spiko') : MYCEG();
+  // QR-tartalomból a darabazonosító: új (v60) adatlap linkkel (#d=…, „Azonosító: …”) vagy régi PROJ|pid|… formátum, vagy kézzel beírt azonosító
+  function qrPid(txt) { const s = String(txt || '').trim(); const md = /[#&]d=([^\s&]+)/.exec(s); if (md) { try { return decodeURIComponent(md[1]); } catch (e) { return md[1]; } }
+    const ld = /Azonosító:\s*([^\s(]+)/.exec(s); if (ld) return ld[1]; const parts = s.split('|'); return parts.length > 1 ? parts[1] : s; }
   function helyFind(txt) { const s = String(txt || '').trim(); if (!s) return [];
-    const by = allUnits().by, parts = s.split('|'); const pidQ = parts.length > 1 ? parts[1] : s; // QR: PROJ|pid|…
+    const by = allUnits().by; const pidQ = qrPid(s);
     const up = pidQ.toUpperCase().replace(/\s+/g, '');
     for (const [pid, r] of by) if (pid.toUpperCase().replace(/\s+/g, '') === up) return [r];
     const pe = parseEl(pidQ); if (pe) { const us = unitsOf(pe.sys, pe.n); if (us.length) return us; }
     return []; }
+  // v60: a QR-kód linkje (…/Promat/#d=<azonosító>) a programot rögtön ennél a darabnál, a Helyszín oldalon nyitja meg
+  function deepLink() { const m = /[#&]d=([^&]+)/.exec(location.hash || ''); if (!m) return; let pid = m[1]; try { pid = decodeURIComponent(pid); } catch (e) { }
+    S.tab = 'kovet'; KV = 'hely'; HELY.pid = pid; HELY.q = pid; HELY.err = ''; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } try { renderPane(); window.scrollTo(0, 0); } catch (e) { } }
+  setTimeout(deepLink, 0); window.addEventListener('hashchange', deepLink);
   function helyCard(r) { const t = trkOf(r.pid), C = CINF(), adm = ISADM(), k = r.sys + '|' + r.n;
     const st = PH.map(([ph, lab, col]) => { const x = t[ph]; return `<div class="hst" style="border-left:6px solid ${x ? col : 'var(--line)'}"><b>${esc(lab)}</b><span>${x ? esc(phTxt(x)) : '—'}</span></div>`; }).join('');
     const btn = (ph, lab, ok) => ok ? (t[ph] ? `<button class="b hbig" disabled>✓ ${esc(lab)} – kész</button>` : `<button class="b pri hbig" data-hely="${ph}" data-pid="${esc(r.pid)}">✓ ${esc(lab)}</button>`) : '';
@@ -15720,7 +15744,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const tick = async () => { if (!QRS || !QRS.on) return; let txt = '';
       try { if (v.readyState >= 2) { if (det) { const r = await det.detect(v); if (r && r[0]) txt = r[0].rawValue; }
         else if (typeof jsQR === 'function') { const w = v.videoWidth, hh = v.videoHeight, s = Math.min(1, 720 / Math.max(w, hh)); cv.width = Math.round(w * s); cv.height = Math.round(hh * s); cx.drawImage(v, 0, 0, cv.width, cv.height); const im = cx.getImageData(0, 0, cv.width, cv.height), r = jsQR(im.data, im.width, im.height, { inversionAttempts: 'dontInvert' }); if (r) txt = r.data; } } } catch (e) { }
-      if (txt) { stop(); try { navigator.vibrate && navigator.vibrate(80); } catch (e) { } HELY.err = ''; HELY.pid = txt; HELY.q = (txt.split('|')[1] || txt); if (!helyFind(txt).length) HELY.err = 'A beolvasott kód nem ennek a projektnek a darabja: ' + txt.slice(0, 60); renderPane(); window.scrollTo(0, 0); return; }
+      if (txt) { stop(); try { navigator.vibrate && navigator.vibrate(80); } catch (e) { } HELY.err = ''; HELY.pid = txt; HELY.q = qrPid(txt); if (!helyFind(txt).length) HELY.err = 'A beolvasott kód nem ennek a projektnek a darabja: ' + txt.slice(0, 60); renderPane(); window.scrollTo(0, 0); return; }
       setTimeout(tick, det ? 120 : 220); };
     tick();
   }
