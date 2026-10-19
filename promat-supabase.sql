@@ -1,5 +1,5 @@
 -- =====================================================================
--- Promat konszignáció – Supabase adatbázis (v58: + ember felvétele közvetlenül; v57: felhasználónév, menütiltás, jelszó)
+-- Promat konszignáció – Supabase adatbázis (v59: + belépési / használati napló; v58: ember felvétele; v57: felhasználónév, menük, jelszó)
 -- Bemásolandó: Supabase → SQL Editor → New query → Run. Többször is
 -- lefuttatható (minden "if not exists" / "or replace").
 --
@@ -355,6 +355,55 @@ begin
   values (p_user, trim(p_nev), u.email, p_ceg, p_szerep, coalesce((select array_agg(distinct x) from unnest(p_tilt) x where coalesce(x, '') <> ''), '{}'));
 end $$;
 
+-- ---------- v59: belépési és használati napló (csak az admin látja) ----------
+-- Minden belépés egy munkamenet; a program percenként jelez: melyik oldalon van, mennyi ideig használta ténylegesen
+-- (aktív = látható az ablak és az utolsó 3 percben volt kattintás / gépelés). 180 napnál régebbi sorok törlődnek.
+create table if not exists public.munkamenet (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  kezdet timestamptz not null default now(),
+  utolso timestamptz not null default now(),
+  aktiv_mp int not null default 0,
+  eszkoz text,
+  oldalak jsonb not null default '{}',
+  vege timestamptz
+);
+alter table public.munkamenet add column if not exists vege timestamptz;
+create index if not exists munkamenet_kezdet on public.munkamenet (kezdet desc);
+create index if not exists munkamenet_user on public.munkamenet (user_id, kezdet desc);
+alter table public.munkamenet enable row level security;
+drop policy if exists munkamenet_olv on public.munkamenet;
+create policy munkamenet_olv on public.munkamenet for select to authenticated using (public.is_admin());
+revoke all on public.munkamenet from anon;
+grant select on public.munkamenet to authenticated;
+revoke insert, update, delete on public.munkamenet from authenticated;
+
+create or replace function public.mm_kezd(p_eszkoz text) returns bigint
+language plpgsql security definer set search_path = public as $$
+declare nid bigint;
+begin
+  if not public.is_tag() then raise exception 'not_granted' using errcode = '42501'; end if;
+  delete from public.munkamenet where kezdet < now() - interval '180 days';
+  insert into public.munkamenet (user_id, eszkoz) values (auth.uid(), left(coalesce(p_eszkoz, ''), 120)) returning id into nid;
+  return nid;
+end $$;
+
+create or replace function public.mm_jel(p_id bigint, p_mp int, p_oldal text) returns void
+language plpgsql security definer set search_path = public as $$
+declare d int := greatest(0, least(coalesce(p_mp, 0), 900)); o text := left(coalesce(nullif(trim(p_oldal), ''), '—'), 60);
+begin
+  update public.munkamenet
+     set utolso = now(), aktiv_mp = aktiv_mp + d,
+         oldalak = case when d > 0 then jsonb_set(oldalak, array[o], to_jsonb(coalesce((oldalak->>o)::int, 0) + d)) else oldalak end
+   where id = p_id and user_id = auth.uid() and kezdet > now() - interval '2 days';
+end $$;
+
+create or replace function public.mm_vege(p_id bigint) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  update public.munkamenet set vege = now(), utolso = now() where id = p_id and user_id = auth.uid() and vege is null;
+end $$;
+
 -- ---------- sorszintű olvasási szabályok ----------
 alter table public.cegek enable row level security;
 alter table public.profilok enable row level security;
@@ -385,7 +434,7 @@ grant execute on function public.doc_set(text, text, jsonb), public.doc_merge(te
   public.ceg_ment(text, text, text, boolean, boolean, boolean), public.ceg_rendszerek(text, text[]), public.meghivo_torol(text),
   public.en_profil(), public.is_admin(), public.is_tag(), public.en_ceg(),
   public.kezelheti(uuid), public.profil_tilt(uuid, text[]), public.jelszo_allit(uuid, text),
-  public.felh_letrehoz(uuid, text, text, text, text[]) to authenticated;
+  public.felh_letrehoz(uuid, text, text, text, text[]), public.mm_kezd(text), public.mm_jel(bigint, int, text), public.mm_vege(bigint) to authenticated;
 
 -- ---------- élő frissítés (más gépen rögzített adat azonnal megjelenik) ----------
 alter table public.docs replica identity full;
