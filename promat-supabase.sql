@@ -1,5 +1,5 @@
 -- =====================================================================
--- Promat konszignáció – Supabase adatbázis (v57: + felhasználónév, menütiltás, jelszó-visszaállítás)
+-- Promat konszignáció – Supabase adatbázis (v58: + ember felvétele közvetlenül; v57: felhasználónév, menütiltás, jelszó)
 -- Bemásolandó: Supabase → SQL Editor → New query → Run. Többször is
 -- lefuttatható (minden "if not exists" / "or replace").
 --
@@ -331,6 +331,30 @@ begin
   update auth.users set encrypted_password = extensions.crypt(p_jelszo, extensions.gen_salt('bf', 10)), updated_at = now() where id = p_user;
 end $$;
 
+-- ---------- v58: új ember felvétele közvetlenül (admin / cégvezető), meghívókód nélkül ----------
+-- A program előbb létrehozza a bejelentkezési fiókot (felhasználónév + jelszó), majd ezzel a cégéhez és szerepéhez köti.
+-- Csak az utolsó 30 percben létrehozott, még semmihez nem kötött fiók köthető be – meglévő fiókot így nem lehet elvenni.
+create or replace function public.felh_letrehoz(p_user uuid, p_nev text, p_ceg text, p_szerep text, p_tilt text[] default '{}') returns void
+language plpgsql security definer set search_path = public as $$
+declare me public.profilok; u record;
+begin
+  select * into me from public.profilok where user_id = auth.uid() and aktiv;
+  if me.user_id is null then raise exception 'not_granted' using errcode = '42501'; end if;
+  if p_szerep not in ('admin','cegvezeto','rogzito','olvaso') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
+  if me.szerep = 'cegvezeto' then
+    if p_ceg is distinct from me.ceg_id or p_szerep not in ('rogzito','olvaso') then
+      raise exception 'not_granted: cégvezető csak a saját cégébe vehet fel rögzítőt / olvasót' using errcode = '42501'; end if;
+  elsif me.szerep <> 'admin' then raise exception 'not_granted' using errcode = '42501'; end if;
+  if coalesce(trim(p_nev), '') = '' then raise exception 'invalid_argument: név kell' using errcode = '22023'; end if;
+  if not exists (select 1 from public.cegek where id = p_ceg) then raise exception 'invalid_argument: ismeretlen cég' using errcode = '22023'; end if;
+  select id, email, created_at into u from auth.users where id = p_user;
+  if u.id is null then raise exception 'invalid_argument: nincs ilyen fiók' using errcode = '22023'; end if;
+  if exists (select 1 from public.profilok where user_id = p_user) then raise exception 'invalid_argument: ez a fiók már tag' using errcode = '22023'; end if;
+  if u.created_at < now() - interval '30 minutes' then raise exception 'not_granted: csak most létrehozott fiók köthető be' using errcode = '42501'; end if;
+  insert into public.profilok (user_id, nev, email, ceg_id, szerep, tilt)
+  values (p_user, trim(p_nev), u.email, p_ceg, p_szerep, coalesce((select array_agg(distinct x) from unnest(p_tilt) x where coalesce(x, '') <> ''), '{}'));
+end $$;
+
 -- ---------- sorszintű olvasási szabályok ----------
 alter table public.cegek enable row level security;
 alter table public.profilok enable row level security;
@@ -360,7 +384,8 @@ grant execute on function public.doc_set(text, text, jsonb), public.doc_merge(te
   public.admin_igenyles(text), public.meghivo_uj(text, text, int, int), public.csatlakozas(text, text), public.profil_allit(uuid, boolean, text),
   public.ceg_ment(text, text, text, boolean, boolean, boolean), public.ceg_rendszerek(text, text[]), public.meghivo_torol(text),
   public.en_profil(), public.is_admin(), public.is_tag(), public.en_ceg(),
-  public.kezelheti(uuid), public.profil_tilt(uuid, text[]), public.jelszo_allit(uuid, text) to authenticated;
+  public.kezelheti(uuid), public.profil_tilt(uuid, text[]), public.jelszo_allit(uuid, text),
+  public.felh_letrehoz(uuid, text, text, text, text[]) to authenticated;
 
 -- ---------- élő frissítés (más gépen rögzített adat azonnal megjelenik) ----------
 alter table public.docs replica identity full;
