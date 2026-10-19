@@ -13387,7 +13387,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v63 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v64 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -16555,6 +16555,31 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   }
   document.addEventListener('change', ev => { const t = ev.target; if (!t.dataset || t.dataset.br == null) return; const k = t.dataset.br; if (k === 'on') { BR.on = t.checked; if (BR.on && brSum().ok) BROPEN = false; else if (!BR.on) BROPEN = true; } else if (k === 'piece') BR.piece = t.checked; else BR[k] = t.value; brSave(); renderPane(); }, true);
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-brm]'); if (!b) return; BR.mode = b.dataset.brm; if (BR.mode === 'gy' && BR.ceg && ceg(BR.ceg).tip === 'kozos') BR.ceg = ''; brSave(); renderPane(); }, true);
+  /* ---------- v64: rámutatásra azonnali állapotcímke (alaprajz, Nagy átnézet 3D, Rendszer idomonként 3D) ---------- */
+  function hovHTML(k) { const q = avP(k); if (!q.sy) return '';
+    if (isC(q.n)) { const r = dampK(q.sy, q.n); if (!r) return ''; return `<b>${esc(q.sy)} / ${esc(String(q.n))}</b> · ${esc(r.x.t)}<div class="hvst" style="background:${dCol(r)}">${esc(DSTN[dSt(r)])}</div>`; }
+    const e = elsOf([q.sy]).find(x => x.n === +q.n); if (!e) return ''; let us = unitsOf(q.sy, +q.n); const all = us.length; if (q.part) us = us.filter(r => (r.part || 1) === q.part);
+    const head = `<b>${esc(q.sy)} / ${e.n}</b>${q.part ? ` · ${q.part}/${all}. darab` : all > 1 ? ` · ${all} darab` : ''}<div class="hvsub">${esc(Core.typeName(e))} ${esc(Core.sizeText(e))} mm${e.t === 'K' ? ' · ' + (e.ang || 90) + '°' : e.L && !q.part ? ' · ' + nf(e.L, 0) + ' mm' : ''}</div>`;
+    if (!us.length) { const st = stubOf(q.sy, +q.n); return head + `<div class="hvst" style="background:#9AA5AD">${st ? 'csonk – a ' + st.host + '. idom része' : 'nem gyártandó (nem Promat)'}</div>`; }
+    const s4 = st4Of(us), W = whoOf(us), nSz = us.filter(r => stageOf(trkOf(r.pid)) >= 4).length;
+    let h = head + `<div class="hvst" style="background:${ST4[s4][1]}">${esc(ST4[s4][0])}${us.length > 1 && nSz && nSz < us.length ? ` · ${nSz}/${us.length} darab fent` : ''}</div>`;
+    if (W.gy) h += `<div class="hvrow">Legyártotta: <b>${esc(W.gy)}</b></div>`; if (W.sz) h += `<div class="hvrow">Felszerelte: <b>${esc(W.sz)}</b></div>`;
+    h += `<div class="hvhint">${BR.on ? 'Kattintás: ' + esc((BRM.find(m => m[0] === BR.mode) || [0, ''])[1].toLowerCase()) : 'Kattintás: adatlap, rögzítés'}</div>`; return h; }
+  let HOVK = '', HOVT = 0;
+  function hovShow(k, x, y) { let t = document.getElementById('hovtip'); if (!k) { if (t) t.hidden = true; HOVK = ''; return; }
+    if (!t) { t = document.createElement('div'); t.id = 'hovtip'; document.body.appendChild(t); }
+    if (k !== HOVK) { const h = hovHTML(k); if (!h) { t.hidden = true; HOVK = ''; return; } t.innerHTML = h; HOVK = k; }
+    t.hidden = false; const W = t.offsetWidth, H = t.offsetHeight; t.style.left = Math.min(window.innerWidth - W - 8, x + 16) + 'px'; t.style.top = (y + 18 + H > window.innerHeight ? y - H - 12 : y + 18) + 'px'; }
+  document.addEventListener('mousemove', ev => { if (ev.buttons) { hovShow(null); return; } const tg = ev.target;
+    const g = tg.closest && tg.closest('#pane .zv svg g[data-av]'); if (g) { const ti = g.querySelector('title'); if (ti) ti.remove(); hovShow(g.dataset.av, ev.clientX, ev.clientY); return; }
+    if (V3 && tg === V3.R.domElement) { const now = performance.now(); if (now - HOVT < 60) { if (HOVK) hovShow(HOVK, ev.clientX, ev.clientY); return; } HOVT = now;
+      const r = tg.getBoundingClientRect(), T = V3.T, ray = new T.Raycaster(); ray.setFromCamera(new T.Vector2((ev.clientX - r.left) / r.width * 2 - 1, -(ev.clientY - r.top) / r.height * 2 + 1), V3.cam);
+      const hit = ray.intersectObjects([...V3.objs.values()].filter(o => o.visible), false)[0]; hovShow(hit ? hit.object.userData.k : null, ev.clientX, ev.clientY); return; }
+    if (I3 && tg === I3.R.domElement) { const now = performance.now(); if (now - HOVT < 60) { if (HOVK) hovShow(HOVK, ev.clientX, ev.clientY); return; } HOVT = now;
+      const hit = i3Hit(I3, ev), ud = hit && hit.object.userData; hovShow(ud && ud.n != null ? I3.sys + '|' + ud.n + (ud.part ? '#' + ud.part : '') : null, ev.clientX, ev.clientY); return; }
+    if (HOVK) hovShow(null); }, { passive: true });
+  document.addEventListener('scroll', () => { if (HOVK) hovShow(null); }, { passive: true, capture: true });
+  try { document.head.insertAdjacentHTML('beforeend', '<style>#hovtip{position:fixed;z-index:9990;pointer-events:none;background:#fff;border:1px solid #C9D3D9;border-radius:8px;box-shadow:0 8px 24px rgba(16,32,44,.22);padding:8px 10px;font:13px/1.35 system-ui,sans-serif;color:#1F2D36;max-width:300px}#hovtip .hvsub{color:#5D6B74;font-size:12px;margin-top:1px}#hovtip .hvst{display:inline-block;margin:6px 0 2px;padding:3px 8px;border-radius:5px;color:#fff;font-weight:700;font-size:12.5px}#hovtip .hvrow{font-size:12.5px;margin-top:2px}#hovtip .hvhint{font-size:11px;color:#8C99A3;margin-top:5px}</style>'); } catch (e) { }
   // idom-adatlap felugró ablakban (Nagy átnézet): méretek, hely, állapot, rögzítés
   let POP = null;
   // v62: a felugró ablak mindig a képernyőn belül (mérés után igazítva); rögzítéskor csak az ablak frissül, az oldal (3D, alaprajzok) a bezáráskor
@@ -16780,11 +16805,12 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function v3Select(k) { const V = V3; if (!V) return; V.sel = k; v3Apply(); const box = document.getElementById('v3info'); if (!box) return; box.hidden = true; return; const i = k && V3P && V3P.info.get(k);
     if (!i) { box.hidden = true; return; } box.hidden = false;
     box.innerHTML = `<b>${esc(i.sys)} / ${i.n}</b> · ${esc(i.ty)} <span class="mono">${esc(i.sz)}</span>${i.m2 ? ' · ' + nf(i.m2, 2) + ' m²' : ''}<br><span class="hint">${esc(i.lab)}${i.gy ? ' · gyártotta: ' + esc(i.gy) : ''}${i.sze ? ' · szerelte: ' + esc(i.sze) : ''}</span><br><button class="b sm pri" data-av="${esc(i.sys)}|${i.n}">Megnyitás: rendszer idomonként →</button> <button class="b sm" data-v3="unsel">✕</button>`; }
+  try { Object.defineProperty(window, '__KV', { value: () => KV, configurable: true }); } catch (e) { }
   function v3Mount() {
     const box = document.getElementById('v3box'); if (!box) return;
     if (!window.THREE) { box.innerHTML = '<p class="hint" style="padding:20px">A 3D megjelenítő nem érhető el ebben a böngészőben.</p>'; return; }
     try { if (!V3) { V3 = v3Build(); if (!V3) return; v3Apply(); v3View('iso'); } } catch (e) { box.innerHTML = '<p class="hint" style="padding:20px">A 3D modell nem jeleníthető meg: ' + esc(e.message || '') + '</p>'; V3 = null; return; }
-    box.innerHTML = ''; box.appendChild(V3.R.domElement); v3Size(); v3Apply(); if (V3.sel) v3Select(V3.sel); }
+    if (!(box.childNodes.length === 1 && box.firstChild === V3.R.domElement)) { box.innerHTML = ''; box.appendChild(V3.R.domElement); v3Size(); } v3Apply(); if (V3.sel) v3Select(V3.sel); }
   function v3Size() { const V = V3, box = document.getElementById('v3box'); if (!V || !box) return; const full = document.getElementById('v3wrap').classList.contains('full'); const w = box.clientWidth || 1000, h = full ? Math.max(300, window.innerHeight - 120) : Math.round(Math.min(680, Math.max(420, w * 0.55))); V.R.setSize(w, h); V.cam.aspect = w / h; V.cam.updateProjectionMatrix(); V.draw(); }
   window.addEventListener('resize', () => { if (V3 && document.getElementById('v3box')) v3Size(); });
   try { Object.defineProperty(window, '__v3cam', { value: () => V3 ? { p: V3.cam.position.toArray().map(v => +v.toFixed(2)), f: V3.focus.toArray().map(v => +v.toFixed(2)), near: V3.cam.near, proj: k => { const o = V3.objs.get(k); if (!o) return null; o.geometry.computeBoundingBox(); const c = o.geometry.boundingBox.getCenter(new V3.T.Vector3()).project(V3.cam), r = V3.R.domElement.getBoundingClientRect(); return [r.left + (c.x + 1) / 2 * r.width, r.top + (1 - c.y) / 2 * r.height, c.z]; } } : null, configurable: true }); } catch (e) { }
@@ -17306,11 +17332,36 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     navGuard(); renderNav();
     const p = $('#pane'), y = window.scrollY;
     // stabilitás: egy oldal hibája nem viheti el az egész programot – hibaüzenet, a menü és a mentés tovább működik
-    try { p.innerHTML = S.tab === 'elemek' ? paneElemek() : S.tab === 'lap' ? paneLap() : S.tab === 'konsz' ? paneKonsz() : S.tab === 'szabas' ? paneSzabas() : S.tab === 'osszes' ? paneOsszes() : S.tab === 'felulet' ? paneFelulet() : S.tab === 'kovet' ? paneKovet() : paneBeall(); }
+    try { const html = S.tab === 'elemek' ? paneElemek() : S.tab === 'lap' ? paneLap() : S.tab === 'konsz' ? paneKonsz() : S.tab === 'szabas' ? paneSzabas() : S.tab === 'osszes' ? paneOsszes() : S.tab === 'felulet' ? paneFelulet() : S.tab === 'kovet' ? paneKovet() : paneBeall();
+      const pg = S.tab + '|' + (S.tab === 'kovet' ? (window.__KV ? window.__KV() : '') : '');
+      // v64: ugyanazon az oldalon maradva csak a változott részek frissülnek (nem villog, nem ugrik, a 3D vászon a helyén marad)
+      if (S.tab === 'kovet' && p.dataset.pg === pg && p.firstChild) { try { const t = document.createElement('template'); t.innerHTML = html; morph(p, t.content); } catch (e) { console.error('[Promat] részleges frissítés', e); p.innerHTML = html; } }
+      else p.innerHTML = html;
+      p.dataset.pg = pg; }
     catch (e) { console.error('[Promat] oldalhiba', e); p.innerHTML = `<div class="card" style="padding:16px;border-left:6px solid var(--bad)"><h2 style="margin:0 0 6px">Ezt az oldalt nem sikerült megjeleníteni</h2><p>Az adatok nem sérültek, a mentés működik. Válassz másik menüpontot, vagy töltsd újra az oldalt (F5).</p><p class="hint mono" style="font-size:12px">${esc(String(e && e.message || e))}</p></div>`; }
     window.scrollTo(0, y);
     try { renderCtx(); } catch (e) { console.error('[Promat] fejléc', e); }
     try { if (window.__afterPane) window.__afterPane(); } catch (e) { console.error('[Promat] 3D/rajz', e); }
+  }
+  // DOM-összefésülés: a régi fát a lehető legkevesebb módosítással az újhoz igazítja
+  function morph(oldP, newP) {
+    // az élő 3D dobozt (#v3box, #i3box) soha nem dobja el: ha a környezete cserélődik, átteszi az új helyére
+    const live = (root) => root.querySelectorAll ? [...root.querySelectorAll('#v3box,#i3box')] : [];
+    const swap = (oldN, newN) => { const L = live(oldN); oldN.replaceWith(newN); for (const b of L) { const nb = newN.id === b.id ? newN : newN.querySelector && newN.querySelector('#' + b.id); if (nb) nb.replaceWith(b); } };
+    const oc = [...oldP.childNodes], nc = [...newP.childNodes];
+    if (oc.length !== nc.length) { const L = live(oldP); oldP.replaceChildren(...nc); for (const b of L) { const nb = oldP.querySelector('#' + b.id); if (nb) nb.replaceWith(b); } return; }
+    for (let i = 0; i < oc.length; i++) { const o = oc[i], w = nc[i];
+      if (o.nodeType !== w.nodeType || o.nodeName !== w.nodeName || (o.id || '') !== (w.id || '')) { swap(o, w); continue; }
+      if (o.nodeType === 3 || o.nodeType === 8) { if (o.nodeValue !== w.nodeValue) o.nodeValue = w.nodeValue; continue; }
+      if (o.nodeType !== 1 || o.isEqualNode(w)) continue;
+      const keepKids = o.id === 'v3box' || o.id === 'i3box' || (!w.firstChild && o.firstChild && o.tagName === 'DIV'); // élő 3D / utólag kitöltött rajzhely
+      for (const a of [...o.attributes]) if (!w.hasAttribute(a.name)) o.removeAttribute(a.name);
+      for (const a of [...w.attributes]) if (o.getAttribute(a.name) !== a.value) o.setAttribute(a.name, a.value);
+      if (o.tagName === 'INPUT') { if (o.type === 'checkbox' || o.type === 'radio') o.checked = w.hasAttribute('checked'); else if (document.activeElement !== o) o.value = w.getAttribute('value') || ''; }
+      if (keepKids) continue;
+      morph(o, w);
+      if (o.tagName === 'SELECT') { const sel = w.querySelector('option[selected]'); o.value = sel ? sel.value : (o.options[0] ? o.options[0].value : ''); }
+      if (o.tagName === 'TEXTAREA' && document.activeElement !== o) o.value = w.textContent; }
   }
   function printDoc(html) { const f = document.createElement('iframe'); f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0'; f.srcdoc = html; f.onload = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('A nyomtatás itt nem érhető el; töltsd le a fájlt, és abból nyomtass.'); } setTimeout(() => f.remove(), 60000); }; document.body.appendChild(f); }
   let tt = null;
