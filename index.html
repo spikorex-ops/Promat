@@ -292,6 +292,12 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       del: async k => { try { const db = await open(); db.transaction('kv', 'readwrite').objectStore('kv').delete(k); } catch (e) { } } }; })();
 
   // ---------- konfiguráció: Project URL + publishable kulcs (nyilvános kulcs – a jogosultságot az adatbázis szabályai adják) ----------
+  // v57: felhasználónév is lehet (e-mail nélkül): belül <név>@promat.invalid címként tárolja a Supabase
+  const FDOM = 'promat.invalid';
+  const unorm = x => String(x || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '.').replace(/[^a-z0-9._-]/g, '').replace(/\.{2,}/g, '.').replace(/^[.-]+|[.-]+$/g, '');
+  const toEmail = x => { x = String(x || '').trim(); return x.includes('@') ? x.toLowerCase() : unorm(x) + '@' + FDOM; };
+  const dispU = e => { e = String(e || ''); return e.endsWith('@' + FDOM) ? e.slice(0, -FDOM.length - 1) : e; };
+  window.__DISPU = dispU;
   const ADMHASH = /[#&]admin\b/.test(location.hash || '');
   let cfg = lsGet(CFGK, null) || (window.PROMAT_SB && window.PROMAT_SB.u && window.PROMAT_SB.k ? { u: window.PROMAT_SB.u, k: window.PROMAT_SB.k } : null);
   (() => { const m = /[#&]m=([A-Za-z0-9_-]+)/.exec(location.hash || ''); if (!m) return; const o = b64d(m[1]); if (o && o.u && o.k) { cfg = { u: o.u, k: o.k }; lsSet(CFGK, cfg); if (o.c) lsSet(PENDK, { c: o.c, ceg: o.n || '' }); } try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } })();
@@ -313,7 +319,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   function screen(html) { let o = $('#pboot'); if (!o) { o = document.createElement('div'); o.id = 'pboot'; document.body.appendChild(o); } o.innerHTML = `<div class="bx"><h1>Promat konszignáció</h1>${html}</div>`; box = o.firstChild; return box; }
   const msg = (cls, t) => { const e = box && box.querySelector('.msg'); if (e) { e.className = 'msg ' + cls; e.textContent = t; e.hidden = !t; } };
   const busy = (b, on) => { if (b) { b.disabled = on; if (on) { b.dataset.t = b.textContent; b.textContent = '…'; } else if (b.dataset.t) b.textContent = b.dataset.t; } };
-  const huErr = e => { const m = String((e && (e.message || e.error_description)) || e || ''); if (/Invalid login credentials/i.test(m)) return 'Hibás e-mail cím vagy jelszó.'; if (/already registered/i.test(m)) return 'Ezzel az e-mail címmel már van fiók – lépj be.'; if (/Password should be at least/i.test(m)) return 'A jelszó legalább 6 karakter legyen.'; if (/Email not confirmed/i.test(m)) return 'Az e-mail cím még nincs megerősítve – nézd meg a postafiókodat.'; if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Nincs internetkapcsolat (vagy a Supabase-projekt szünetel).'; if (/rate limit/i.test(m)) return 'Túl sok próbálkozás – várj pár percet.'; return m.replace(/^not_granted:?\s*/, '').replace(/^invalid_argument:?\s*/, ''); };
+  const huErr = e => { const m = String((e && (e.message || e.error_description)) || e || ''); if (/Invalid login credentials/i.test(m)) return 'Hibás e-mail cím vagy jelszó.'; if (/already registered/i.test(m)) return 'Ez a felhasználónév / e-mail cím már foglalt – válassz másikat, vagy lépj be.'; if (/Password should be at least/i.test(m)) return 'A jelszó legalább 6 karakter legyen.'; if (/Email not confirmed/i.test(m)) return 'Az e-mail cím még nincs megerősítve – nézd meg a postafiókodat.'; if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'Nincs internetkapcsolat (vagy a Supabase-projekt szünetel).'; if (/rate limit/i.test(m)) return 'Túl sok próbálkozás – várj pár percet.'; return m.replace(/^not_granted:?\s*/, '').replace(/^invalid_argument:?\s*/, ''); };
 
   function showSetup(err) {
     screen(`<p>Ezen a gépen a program még nincs beállítva.</p>
@@ -351,7 +357,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       ${mode === 'reg' ? `<p class="mute">${pend && pend.ceg ? `Meghívó: <b>${esc(pend.ceg)}</b>` : 'A meghívókódot Sándortól vagy a cégvezetődtől kapod.'}</p>` : ''}
       <div class="msg ${note ? 'ok' : 'err'}" ${note ? '' : 'hidden'}>${esc(note || '')}</div>
       ${mode === 'reg' ? `<label>Teljes név<input id="pn" autocomplete="name" placeholder="pl. Kovács Péter"></label>` : ''}
-      <label>E-mail cím<input id="pe" type="email" autocomplete="username" inputmode="email"></label>
+      <label>Felhasználónév vagy e-mail cím<input id="pe" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+      ${mode === 'reg' ? '<p class="mute" style="font-size:12px;margin-top:-4px">Ha nincs saját e-mail címed, válassz felhasználónevet, pl. <b>kovacs.peter</b>.</p>' : ''}
       <label>Jelszó${mode === 'reg' ? ' (legalább 8 karakter)' : ''}<input id="pp" type="password" autocomplete="${mode === 'reg' ? 'new-password' : 'current-password'}"></label>
       ${mode === 'reg' ? `<label>Meghívókód<input id="pc" autocomplete="off" value="${esc(pend && pend.c || '')}" style="text-transform:uppercase;letter-spacing:.1em"></label>
         ${ADMHASH ? '<label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="pa" style="min-height:0"> Első admin (még senki nincs a rendszerben)</label>' : ''}` : ''}
@@ -361,7 +368,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => showLogin(b.dataset.m));
     if ($('#pcfg')) $('#pcfg').onclick = e => { e.preventDefault(); showSetup(); };
     const go = $('#pgo');
-    go.onclick = async () => { const e = $('#pe').value.trim(), p = $('#pp').value; if (!e || !p) return msg('err', 'Add meg az e-mail címet és a jelszót.');
+    go.onclick = async () => { const raw = $('#pe').value.trim(), p = $('#pp').value; if (!raw || !p) return msg('err', 'Add meg a felhasználónevet (vagy e-mail címet) és a jelszót.'); const e = toEmail(raw); if (!raw.includes('@') && unorm(raw).length < 3) return msg('err', 'A felhasználónév legalább 3 betű legyen (betű, szám, pont, kötőjel).');
       busy(go, true); try {
         if (mode === 'in') { const r = await sb.auth.signInWithPassword({ email: e, password: p }); if (r.error) throw r.error; return afterLogin(r.data.user); }
         const n = $('#pn').value.trim(), c = $('#pc').value.trim().toUpperCase(), adm = !!($('#pa') && $('#pa').checked);
@@ -371,7 +378,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         if (!r.data.session) { busy(go, false); return showLogin('in', 'Fiók létrehozva. Ha a Supabase e-mail megerősítést kér, kattints a levélben kapott linkre, majd lépj be – a meghívókódot a program megjegyezte.'); }
         return afterLogin(r.data.user);
       } catch (er) { msg('err', huErr(er)); } busy(go, false); };
-    const f = $('#pfor'); if (f) f.onclick = async () => { const e = $('#pe').value.trim(); if (!e) return msg('err', 'Írd be az e-mail címed, és nyomd meg újra.'); busy(f, true); const r = await sb.auth.resetPasswordForEmail(e, { redirectTo: location.origin + location.pathname }); busy(f, false); if (r.error) msg('err', huErr(r.error)); else msg('ok', 'Elküldtük a jelszó-visszaállító levelet (ha van ilyen fiók). A levélben lévő linkre kattintva új jelszót adhatsz meg.'); };
+    const f = $('#pfor'); if (f) f.onclick = async () => { const e = $('#pe').value.trim(); if (!e) return msg('err', 'Írd be az e-mail címed, és nyomd meg újra.'); if (!e.includes('@')) return msg('err', 'Felhasználónévnél a jelszót a cégvezetőd vagy Sándor állítja be újra a programban (Felhasználók oldal → Jelszó). Szólj nekik.'); busy(f, true); const r = await sb.auth.resetPasswordForEmail(e, { redirectTo: location.origin + location.pathname }); busy(f, false); if (r.error) msg('err', huErr(r.error)); else msg('ok', 'Elküldtük a jelszó-visszaállító levelet (ha van ilyen fiók). A levélben lévő linkre kattintva új jelszót adhatsz meg.'); };
     box.querySelectorAll('input').forEach(i => i.addEventListener('keydown', ev => { if (ev.key === 'Enter') go.click(); }));
   }
   function showNewPass() {
@@ -382,7 +389,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   async function rpc(fn, args) { const r = await sb.rpc(fn, args || {}); if (r.error) throw r.error; return r.data; }
   async function loadProfile(uid) {
     const ck = 'promat-prof-' + uid;
-    try { const r = await sb.from('profilok').select('user_id,nev,email,ceg_id,szerep,aktiv').eq('user_id', uid).maybeSingle(); if (r.error) throw r.error;
+    try { const r = await sb.from('profilok').select('*').eq('user_id', uid).maybeSingle(); if (r.error) throw r.error;
       let c = null; if (r.data && r.data.aktiv && r.data.ceg_id) { const q = await sb.from('cegek').select('*').eq('id', r.data.ceg_id).maybeSingle(); c = q.data || null; }
       lsSet(ck, { p: r.data, c }); return { p: r.data, c, online: true };
     } catch (e) { const o = lsGet(ck, null); if (o) return { p: o.p, c: o.c, online: false }; throw e; }
@@ -403,7 +410,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   }
   function showJoin(err) {
     const pend = lsGet(PENDK, null);
-    screen(`<p>Be vagy lépve (<b>${esc(USER.email)}</b>), de még nem vagy tagja egyik cégnek sem.</p><div class="msg err" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
+    screen(`<p>Be vagy lépve (<b>${esc(dispU(USER.email))}</b>), de még nem vagy tagja egyik cégnek sem.</p><div class="msg err" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
       <label>Teljes név<input id="pn" value="${esc((pend && pend.n) || (USER.user_metadata && USER.user_metadata.nev) || '')}"></label>
       <label>Meghívókód<input id="pc" value="${esc(pend && pend.c || '')}" style="text-transform:uppercase;letter-spacing:.1em"></label>
       <button id="pgo">Csatlakozás</button><button class="sec" id="padm">Én vagyok az első admin</button><button class="sec" id="pout">Kijelentkezés</button>`);
@@ -504,14 +511,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     try { localStorage.setItem('promat-kovetes-nev', PROF.nev); } catch (e) { }
     const sd = Object.assign({}, dat.seed || {}); window.PROMAT_PRIV = sd.__priv || {}; delete sd.__priv; window.PROMAT_DATA = dat.data; window.PROMAT_SEED = sd;
     const db = makeDB(), assets = makeAssets(), user = makeUser();
-    window.__SB = sb; window.__PROF = PROF; window.__ROLE = PROF.szerep; window.__CEG = PROF.ceg_id || ''; window.__CEGINF = CEG || null; window.__CFG = cfg; window.__B64E = b64e;
+    window.__SB = sb; window.__PROF = PROF; window.__ROLE = PROF.szerep; window.__CEG = PROF.ceg_id || ''; window.__CEGINF = CEG || null; window.__TILT = (PROF.tilt || []).slice(); window.__CFG = cfg; window.__B64E = b64e;
     window.__blobUrl = async id => URL.createObjectURL(await blobOf(id));
     const of = window.fetch.bind(window); window.fetch = async (u, ...a) => { const s = typeof u === 'string' ? u : (u && u.url) || ''; const m = /\/_blob\/(.+)$/.exec(s); if (m && !/^https?:\/\/[^/]*supabase/.test(s)) { try { return new Response(await blobOf(decodeURIComponent(m[1]))); } catch (e) { return new Response('', { status: 404 }); } } return of(u, ...a); };
     window.claude = { use: n => Promise.resolve(n === 'db' ? db : n === 'assets' ? assets : n === 'user' ? user : null) };
     const o = $('#pboot'); if (o) o.remove(); STARTED = true;
     for (const id of ['pcore', 'papp']) { const src = document.getElementById(id); if (!src) continue; const s = document.createElement('script'); s.textContent = src.textContent; src.remove(); document.body.appendChild(s); }
     const u = document.createElement('div'); u.id = 'puser';
-    u.innerHTML = `<span class="net"></span><span title="${esc(PROF.email || USER.email)}">${esc(PROF.nev)} · ${esc(CEG ? CEG.nev : (PROF.ceg_id || ''))} · ${esc(ROLEN[PROF.szerep] || PROF.szerep)}</span><button id="pout" title="Kijelentkezés">Kilépés</button>`;
+    u.innerHTML = `<span class="net"></span><span title="${esc(dispU(PROF.email || USER.email))}">${esc(PROF.nev)} · ${esc(CEG ? CEG.nev : (PROF.ceg_id || ''))} · ${esc(ROLEN[PROF.szerep] || PROF.szerep)}</span><button id="pout" title="Kijelentkezés">Kilépés</button>`;
     document.body.appendChild(u); document.body.classList.add('has-puser'); NET(); window.addEventListener('online', NET); window.addEventListener('offline', NET);
     $('#pout').onclick = () => { const pq = lsGet('promat-pending', []); if (pq.length && !confirm(pq.length + ' rögzítés még nincs feltöltve (nincs net?). Ha most kilépsz, ezen a gépen megmaradnak, és a következő belépéskor feltöltődnek.\n\nKilépsz?')) return; sb.auth.signOut().then(() => location.reload()); };
   }
@@ -13357,7 +13364,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v56 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v57 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -15615,14 +15622,24 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const CINF = () => window.__CEGINF || { gyart: true, szerel: true };
   const NONADM = new Set(['k:hely', 'k:attek', 'k:atnez', 'k:idom', 'k:rogz', 'k:rajz', 'k:eletut', 'k:foto', 'k:hiba', 'k:naplo']);
   const PREPK = new Set(['k:gydash', 'elemek', 'konsz', 'lap', 'szabas', 'felulet']);
-  function navOk(k) {
-    if (k === 'k:felh') return !!window.__SB && (ISADM() || ROLE() === 'cegvezeto');
-    if (ISADM()) return true;
+  // v57: a szerep adja az alapot (navBase), emberenként ebből a menüpontok kikapcsolhatók (profilok.tilt)
+  function navBase(k, role, cinf) {
+    const adm = !role || role === 'admin';
+    if (k === 'k:felh') return !!window.__SB && (adm || role === 'cegvezeto');
+    if (adm) return true;
     if (NONADM.has(k)) return true;
-    if (PREPK.has(k)) return !!CINF().gyart; // gyártó cégnek a konszignáció, gyártási lap, szabásterv kell
+    if (PREPK.has(k)) return !!(cinf || {}).gyart; // gyártó cégnek a konszignáció, gyártási lap, szabásterv kell
     return false;
   }
-  function navGuard() { const cur = S.tab === 'kovet' ? 'k:' + KV : S.tab; if (!navOk(cur)) { S.tab = 'kovet'; KV = 'hely'; } }
+  function navOk(k) {
+    if (!navBase(k, ROLE(), CINF())) return false;
+    if (ISADM()) return true;
+    const T = window.__TILT || []; if (!T.includes(k)) return true;
+    // legalább egy oldal maradjon: ha mindent kikapcsoltak, a Helyszín oldal látszik
+    return k === 'k:hely' && !NAV.some(g => g[1].some(([x]) => x !== k && navBase(x, ROLE(), CINF()) && !T.includes(x)));
+  }
+  function navGuard() { const cur = S.tab === 'kovet' ? 'k:' + KV : S.tab; if (navOk(cur)) return; let first = 'k:hely'; if (!navOk(first)) for (const g of NAV) { const f = g[1].find(([x]) => navOk(x)); if (f) { first = f[0]; break; } }
+    if (first.startsWith('k:')) { S.tab = 'kovet'; KV = first.slice(2); } else S.tab = first; }
 
 
   // telefonon a menü összecsukva: egy „☰ Menü” gomb nyitja, oldalváltáskor bezárul – így a rögzítő oldal azonnal látszik
@@ -15702,6 +15719,13 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const fhRpc = async (fn, a) => { const r = await window.__SB.rpc(fn, a); if (r.error) throw new Error(String(r.error.message || '').replace(/^not_granted:?\s*/, 'Nincs jogosultság: ')); return r.data; };
   const SZN = { admin: 'admin', cegvezeto: 'cégvezető', rogzito: 'rögzítő', olvaso: 'csak olvasás' };
   function fhLink(kod, cegId) { const c = window.__CFG || {}; const cn = (FH.cegek.find(x => x.id === cegId) || {}).nev || ''; return location.origin + location.pathname + '#m=' + window.__B64E({ u: c.u, k: c.k, c: kod, n: cn }); }
+  function fhMenuPanel(p) {
+    const c = FH.cegek.find(x => x.id === p.ceg_id) || {}, T = new Set(p.tilt || []);
+    const groups = NAV.map(([g, it]) => [g, it.filter(([k]) => navBase(k, p.szerep, c))]).filter(x => x[1].length);
+    return `<div class="card" style="padding:12px;display:flex;flex-direction:column;gap:8px;background:#F7FAFB" data-fhmenu="${esc(p.user_id)}"><div><b>${esc(p.nev)}</b> – mely menüpontokat lássa? <span class="hint">(a szerepe – ${esc(SZN[p.szerep] || p.szerep)} – által engedett oldalak; árat és elszámolást csak az admin lát)</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">${groups.map(([g, it]) => `<div><div class="hint" style="font-weight:600;margin-bottom:4px">${esc(g)}</div>${it.map(([k, l]) => `<label style="display:flex;gap:6px;align-items:center;padding:2px 0"><input type="checkbox" data-mk="${esc(k)}" ${T.has(k) ? '' : 'checked'}> ${esc(l)}</label>`).join('')}</div>`).join('')}</div>
+      <div class="row" style="gap:8px"><button class="b pri sm" data-fh="menusave" data-u="${esc(p.user_id)}">Mentés</button><button class="b sm" data-fh="menuall" data-u="${esc(p.user_id)}">Mind bekapcsol</button><button class="b sm" data-fh="menu" data-u="">Bezár</button></div></div>`;
+  }
   function kvFelh() {
     if (!window.__SB) return '<div class="sec"><p class="hint">A felhasználók kezelése az internetes változatban van.</p></div>';
     if (FH.st === 'nincs') { setTimeout(fhLoad, 0); return '<div class="sec"><p class="hint">Betöltés…</p></div>'; }
@@ -15710,7 +15734,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     let h = `<div class="sec" style="gap:12px">${FH.err ? `<div class="badbox">${esc(FH.err)}</div>` : ''}`;
     // meghívó
     h += `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><h2>Új ember meghívása</h2>
-      <p class="hint">A meghívó linket (vagy a kódot) küldd el neki SMS-ben / WhatsAppon. A linkre kattintva megnyílik a program, ő megadja a nevét, e-mail címét és egy jelszót – és már rögzíthet a cége nevében. A link a megadott ideig és számú emberre érvényes.</p>
+      <p class="hint">A meghívó linket (vagy a kódot) küldd el neki SMS-ben / WhatsAppon. A linkre kattintva megnyílik a program, ő megadja a nevét, egy felhasználónevet (vagy az e-mail címét) és egy jelszót – és már rögzíthet a cége nevében. A link a megadott ideig és számú emberre érvényes.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:end">
         <label class="hint">Cég<select id="fhc">${cegs.filter(c => c.aktiv).map(c => opt(c.id, c.nev, MYCEG())).join('')}</select></label>
         <label class="hint">Szerep<select id="fhs">${(adm ? ['rogzito', 'cegvezeto', 'olvaso', 'admin'] : ['rogzito']).map(s => opt(s, SZN[s], 'rogzito')).join('')}</select></label>
@@ -15722,8 +15746,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     h += '</div>';
     // emberek
     const P = adm ? FH.prof : FH.prof.filter(p => p.ceg_id === MYCEG());
-    h += `<div class="card" style="padding:14px"><h2>Emberek (${P.length})</h2><div class="tw"><table><thead><tr><th>Név</th><th>E-mail</th><th>Cég</th><th>Szerep</th><th>Állapot</th><th></th></tr></thead><tbody>${P.map(p => { const me = p.user_id === TUID, canTog = !me && (adm || p.szerep === 'rogzito');
-      return `<tr style="${p.aktiv ? '' : 'opacity:.55'}"><td><b>${esc(p.nev)}</b>${me ? ' (te)' : ''}</td><td>${esc(p.email || '')}</td><td>${esc(cn(p.ceg_id))}</td><td>${adm && !me ? `<select data-fhsz="${esc(p.user_id)}">${Object.keys(SZN).map(s => opt(s, SZN[s], p.szerep)).join('')}</select>` : esc(SZN[p.szerep] || p.szerep)}</td><td>${p.aktiv ? '<span style="color:var(--ok)">aktív</span>' : 'kikapcsolva'}</td><td>${canTog ? `<button class="b sm" data-fh="tog" data-u="${esc(p.user_id)}" data-a="${p.aktiv ? 0 : 1}">${p.aktiv ? 'Kikapcsol' : 'Bekapcsol'}</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+    h += `<div class="card" style="padding:14px"><h2>Emberek (${P.length})</h2><div class="tw"><table><thead><tr><th>Név</th><th>Belépés (felhasználónév / e-mail)</th><th>Cég</th><th>Szerep</th><th>Állapot</th><th></th></tr></thead><tbody>${P.map(p => { const me = p.user_id === TUID, canTog = !me && (adm || p.szerep === 'rogzito'), canMan = !me && (adm || (p.szerep === 'rogzito' || p.szerep === 'olvaso')), nT = (p.tilt || []).length;
+      return `<tr style="${p.aktiv ? '' : 'opacity:.55'}"><td><b>${esc(p.nev)}</b>${me ? ' (te)' : ''}</td><td class="mono">${esc((window.__DISPU || (x => x))(p.email || ''))}</td><td>${esc(cn(p.ceg_id))}</td><td>${adm && !me ? `<select data-fhsz="${esc(p.user_id)}">${Object.keys(SZN).map(s => opt(s, SZN[s], p.szerep)).join('')}</select>` : esc(SZN[p.szerep] || p.szerep)}</td><td>${p.aktiv ? '<span style="color:var(--ok)">aktív</span>' : 'kikapcsolva'}</td><td><div class="row" style="gap:4px;flex-wrap:wrap">${canTog ? `<button class="b sm" data-fh="tog" data-u="${esc(p.user_id)}" data-a="${p.aktiv ? 0 : 1}">${p.aktiv ? 'Kikapcsol' : 'Bekapcsol'}</button>` : ''}${canMan && p.szerep !== 'admin' ? `<button class="b sm" data-fh="menu" data-u="${esc(p.user_id)}">Menük${nT ? ' (' + nT + ' rejtve)' : ''}</button>` : ''}${canMan ? `<button class="b sm" data-fh="pw" data-u="${esc(p.user_id)}">Jelszó</button>` : ''}</div></td></tr>${FH.menu === p.user_id ? `<tr><td colspan="6">${fhMenuPanel(p)}</td></tr>` : ''}`; }).join('')}</tbody></table></div></div>`;
     // érvényes meghívók
     const M = FH.megh.filter(m => new Date(m.lejar) > new Date() && m.hasznalva < m.max_db);
     if (M.length) h += `<div class="card" style="padding:14px"><h2>Érvényes meghívók</h2><div class="tw"><table><thead><tr><th>Kód</th><th>Cég</th><th>Szerep</th><th>Lejár</th><th class="n">Felhasználva</th><th></th></tr></thead><tbody>${M.map(m => `<tr><td class="mono"><b>${esc(m.kod)}</b></td><td>${esc(cn(m.ceg_id))}</td><td>${esc(SZN[m.szerep])}</td><td>${esc(String(m.lejar).slice(0, 10))}</td><td class="n">${m.hasznalva} / ${m.max_db}</td><td><button class="b sm" data-fh="show" data-k="${esc(m.kod)}" data-c="${esc(m.ceg_id || '')}" data-s="${esc(m.szerep)}">Link</button> <button class="b sm" data-fh="delinv" data-k="${esc(m.kod)}">Visszavon</button></td></tr>`).join('')}</tbody></table></div></div>`;
@@ -15734,7 +15758,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         return `<tr data-fhrow="${esc(c.id)}"><td><input data-f="nev" value="${esc(c.nev)}" style="width:170px"></td><td class="mono">${esc(c.id)}</td><td><input type="checkbox" data-f="gyart" ${c.gyart ? 'checked' : ''}></td><td><input type="checkbox" data-f="szerel" ${c.szerel ? 'checked' : ''}></td><td><input type="checkbox" data-f="aktiv" ${c.aktiv ? 'checked' : ''}></td><td><input data-f="rsz" value="${esc(rs.join(', '))}" placeholder="mind" style="width:200px"></td><td class="n">${FH.prof.filter(p => p.ceg_id === c.id && p.aktiv).length}</td><td><button class="b sm" data-fh="cegsave" data-c="${esc(c.id)}">Mentés</button></td></tr>`; }).join('')}</tbody></table></div>
       ${prog.length ? `<div class="row" style="gap:8px;align-items:center"><span class="hint">A programban van, az adatbázisban még nincs: ${prog.map(c => esc(c.nev)).join(', ')}</span><button class="b" data-fh="import">Átvétel</button></div>` : ''}
       <div class="row" style="gap:8px;align-items:end;flex-wrap:wrap"><label class="hint">Új cég azonosító<input id="fhid" placeholder="pl. horvath" style="width:120px"></label><label class="hint">Név<input id="fhnev" placeholder="pl. Horváth Kft." style="width:180px"></label><button class="b" data-fh="newceg">Hozzáadás</button></div></div>`; }
-    return h + `<p class="hint">Jelszót senki helyett nem kell tudnod: ha valaki elfelejti, a belépő képernyőn az „Elfelejtett jelszó” gombbal újat kér e-mailben.</p></div>`;
+    return h + `<p class="hint">Elfelejtett jelszó: aki e-mail címmel lép be, a belépő képernyőn az „Elfelejtett jelszó” gombbal kér újat. Aki felhasználónévvel, annak itt a <b>Jelszó</b> gombbal adsz újat, és megmondod neki. Egy e-mail címhez csak egy fiók tartozhat – a többieknek felhasználónév kell.</p></div>`;
   }
   document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-fh]'); if (!b) return; ev.preventDefault(); ev.stopPropagation(); const a = b.dataset.fh;
     try {
@@ -15743,6 +15767,14 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       if (a === 'copy' && FH.inv) { await navigator.clipboard.writeText(fhLink(FH.inv.kod, FH.inv.ceg)); toast('Link a vágólapon'); return; }
       if (a === 'share' && FH.inv) { await navigator.share({ title: 'Promat – meghívó', text: 'Meghívó a Promat rögzítő programba (kód: ' + FH.inv.kod + ')', url: fhLink(FH.inv.kod, FH.inv.ceg) }); return; }
       if (a === 'delinv') { if (!confirm('Visszavonod a meghívót (' + b.dataset.k + ')?')) return; await fhRpc('meghivo_torol', { p_kod: b.dataset.k }); if (FH.inv && FH.inv.kod === b.dataset.k) FH.inv = null; await fhLoad(); return; }
+      if (a === 'menu') { FH.menu = FH.menu === b.dataset.u ? '' : b.dataset.u; renderPane(); return; }
+      if (a === 'menuall') { const box = document.querySelector(`[data-fhmenu="${CSS.escape(b.dataset.u)}"]`); if (box) box.querySelectorAll('[data-mk]').forEach(x => { x.checked = true; }); return; }
+      if (a === 'menusave') { const box = document.querySelector(`[data-fhmenu="${CSS.escape(b.dataset.u)}"]`), p = FH.prof.find(x => x.user_id === b.dataset.u); if (!box || !p) return;
+        const off = [...box.querySelectorAll('[data-mk]')].filter(x => !x.checked).map(x => x.dataset.mk);
+        if (off.length === box.querySelectorAll('[data-mk]').length && !confirm('Minden menüpont ki van kapcsolva – ekkor csak a Helyszín oldalt látja. Így mented?')) return;
+        await fhRpc('profil_tilt', { p_user: p.user_id, p_tilt: off }); toast(p.nev + ': menük mentve' + (off.length ? ' (' + off.length + ' rejtve)' : '')); FH.menu = ''; await fhLoad(); return; }
+      if (a === 'pw') { const p = FH.prof.find(x => x.user_id === b.dataset.u); if (!p) return; const pw = prompt('Új jelszó – ' + p.nev + ' (legalább 8 karakter).\nMondd meg neki, és kérd meg, hogy jegyezze meg.', ''); if (pw == null) return; if (pw.length < 8) { toast('A jelszó legalább 8 karakter legyen.'); return; }
+        await fhRpc('jelszo_allit', { p_user: p.user_id, p_jelszo: pw }); toast(p.nev + ': új jelszó beállítva'); return; }
       if (a === 'tog') { await fhRpc('profil_allit', { p_user: b.dataset.u, p_aktiv: b.dataset.a === '1', p_szerep: null }); await fhLoad(); return; }
       if (a === 'cegsave') { const tr = b.closest('tr'), g = f => tr.querySelector('[data-f="' + f + '"]'), id = b.dataset.c, c = FH.cegek.find(x => x.id === id) || {};
         await fhRpc('ceg_ment', { p_id: id, p_nev: g('nev').value.trim() || c.nev, p_tip: c.tip || 'alv', p_gyart: g('gyart').checked, p_szerel: g('szerel').checked, p_aktiv: g('aktiv').checked });
