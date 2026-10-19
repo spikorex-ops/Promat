@@ -13385,7 +13385,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v60 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v61 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -13685,9 +13685,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       'Típus: ' + Core.typeName(el) + (el.t === 'K' && el.ang ? ', ' + el.ang + '°' : ''), 'Méret: ' + Core.sizeText(el) + ' mm' + (u.L != null ? ' · hossz ' + u.L + ' mm' : ''), 'Felület: ' + nf(dm, 2) + ' m²'];
     const hely = [el.lv ? 'szint ' + el.lv : '', el.ax ? 'tengely ' + el.ax : '', !el.manual && el.z0 != null ? 'magasság ' + zTxt0(el) + ' m' : ''].filter(Boolean);
     if (hely.length) L.push('Hely: ' + hely.join(' · '));
-    L.push('Anyag: PROMATECT-L500, ' + S.P.t + ' mm');
     if (!el.manual && el.id) L.push('Revit ID: ' + el.id);
-    L.push(QRBASE + '#d=' + encodeURIComponent(pid));
+    L.push('Tervrajz, állapot:', QRBASE + '#d=' + encodeURIComponent(pid));
     let t = L.join('\n'); if (new TextEncoder().encode(t).length > 400) t = [L[0], L[1], L[3], L[4], L[L.length - 1]].join('\n'); // biztonsági tartalék: max. 15. verziós QR
     return t;
   }
@@ -15701,18 +15700,48 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function deepLink() { const m = /[#&]d=([^&]+)/.exec(location.hash || ''); if (!m) return; let pid = m[1]; try { pid = decodeURIComponent(pid); } catch (e) { }
     S.tab = 'kovet'; KV = 'hely'; HELY.pid = pid; HELY.q = pid; HELY.err = ''; try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } try { renderPane(); window.scrollTo(0, 0); } catch (e) { } }
   setTimeout(deepLink, 0); window.addEventListener('hashchange', deepLink);
+  /* ---------- v61: hol van a darab a tervrajzon – alaprajz a darab szintjéről (tengelyháló), kiemelve + ráközelített részlet ---------- */
+  function locPlan(r) {
+    const e = elsOf([r.sys]).find(x => x.n === r.n); if (!e || !e.bx || !e.bx.length || e.manual) return '';
+    const LV = (D.levels || []).slice().sort((a, b) => a[0] - b[0]), lvOf = x => { const z = ((x.z0 || 0) + (x.z1 || 0)) / 2 * 1000; let i = 0; for (let j = 0; j < LV.length; j++) if (z >= LV[j][0] - 600) i = j; return i; };
+    const li = lvOf(e), same = elsOf(NAMES).filter(x => x.bx && x.bx.length && !x.manual && lvOf(x) === li), G0 = D.grid || { x: [], y: [], xl: [], yl: [] };
+    // doboz alaprajzi kiterjedése: 6 szám = két sarokpont; 12 szám = kezdőpont + három élvektor (forgatott doboz, pl. könyök)
+    const qXY = q => { if (q.length >= 12) { let a = 1e12, b = 1e12, c = -1e12, d = -1e12; for (let i = 0; i < 8; i++) { const x = q[0] + (i & 1 ? q[3] : 0) + (i & 2 ? q[6] : 0) + (i & 4 ? q[9] : 0), y = q[1] + (i & 1 ? q[4] : 0) + (i & 2 ? q[7] : 0) + (i & 4 ? q[10] : 0); a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); } return [a, b, c, d]; } return [Math.min(q[0], q[3]), Math.min(q[1], q[4]), Math.max(q[0], q[3]), Math.max(q[1], q[4])]; };
+    const bb = x => { let a = 1e12, b = 1e12, c = -1e12, d = -1e12; for (const q of x.bx) { const r = qXY(q); a = Math.min(a, r[0]); b = Math.min(b, r[1]); c = Math.max(c, r[2]); d = Math.max(d, r[3]); } return [a, b, c, d]; };
+    const T = bb(e), cx = (T[0] + T[2]) / 2, cy = (T[1] + T[3]) / 2;
+    function view(x0, y0, x1, y1, W, H, big) {
+      const pad = 22, s = Math.min((W - pad - 6) / (x1 - x0), (H - pad - 6) / (y1 - y0)), ox = pad + ((W - pad - 6) - (x1 - x0) * s) / 2, oy = pad + ((H - pad - 6) - (y1 - y0) * s) / 2;
+      const X = v => ox + (v - x0) * s, Y = v => oy + (y1 - v) * s, inX = v => v >= x0 && v <= x1, inY = v => v >= y0 && v <= y1;
+      let g = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;background:#FBFCFD;border:1px solid var(--line);border-radius:6px"><defs><clipPath id="lc${big ? 1 : 0}"><rect x="${pad}" y="${pad}" width="${W - pad}" height="${H - pad}"/></clipPath></defs>`;
+      (G0.x || []).forEach((v, i) => { if (!inX(v)) return; g += `<line x1="${X(v).toFixed(1)}" y1="${pad}" x2="${X(v).toFixed(1)}" y2="${H}" stroke="#C9D2D8" stroke-dasharray="4 3" stroke-width=".7"/><circle cx="${X(v).toFixed(1)}" cy="10" r="${big ? 9 : 7}" fill="#fff" stroke="#8C99A3" stroke-width=".8"/><text x="${X(v).toFixed(1)}" y="${big ? 13.5 : 12.8}" text-anchor="middle" font-size="${big ? 9.5 : 7.5}" fill="#33444F">${esc(G0.xl[i] || '')}</text>`; });
+      (G0.y || []).forEach((v, i) => { if (!inY(v)) return; g += `<line x1="${pad}" y1="${Y(v).toFixed(1)}" x2="${W}" y2="${Y(v).toFixed(1)}" stroke="#C9D2D8" stroke-dasharray="4 3" stroke-width=".7"/><circle cx="10" cy="${Y(v).toFixed(1)}" r="${big ? 9 : 7}" fill="#fff" stroke="#8C99A3" stroke-width=".8"/><text x="10" y="${(Y(v) + (big ? 3.5 : 2.8)).toFixed(1)}" text-anchor="middle" font-size="${big ? 9.5 : 7.5}" fill="#33444F">${esc(G0.yl[i] || '')}</text>`; });
+      g += `<g clip-path="url(#lc${big ? 1 : 0})">`;
+      for (const pass of [0, 1, 2]) for (const x of same) { const own = x.sys === e.sys, me = x === e || (x.sys === e.sys && x.n === e.n); if ((pass === 0 && (own || me)) || (pass === 1 && (!own || me)) || (pass === 2 && !me)) continue;
+        const f = me ? '#E0218A' : own ? '#7FA7CF' : '#D5DCE1', st = me ? '#9B0F5E' : own ? '#4F7FAF' : '#BCC5CC';
+        for (const q0 of x.bx) { const q = qXY(q0), a = X(q[0]), b = Y(q[3]), w = Math.max(me ? 3 : 1, (q[2] - q[0]) * s), h = Math.max(me ? 3 : 1, (q[3] - q[1]) * s); g += `<rect x="${a.toFixed(1)}" y="${b.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${f}" stroke="${st}" stroke-width="${me ? 1.2 : .4}"/>`; } }
+      const R = big ? 26 : 16; g += `<circle cx="${X(cx).toFixed(1)}" cy="${Y(cy).toFixed(1)}" r="${R}" fill="none" stroke="#E0218A" stroke-width="2.5"/><circle cx="${X(cx).toFixed(1)}" cy="${Y(cy).toFixed(1)}" r="${R + 6}" fill="none" stroke="#E0218A" stroke-width="1" opacity=".5"/></g>`;
+      if (big) { const m = 5000 * s; g += `<line x1="${W - 12 - m}" y1="${H - 10}" x2="${W - 12}" y2="${H - 10}" stroke="#33444F" stroke-width="2"/><text x="${W - 12 - m / 2}" y="${H - 14}" text-anchor="middle" font-size="9" fill="#33444F">5 m</text>`; }
+      return g + '</svg>'; }
+    const gx = G0.x || [], gy = G0.y || [], ax0 = Math.min(...gx, T[0]) - 6000, ax1 = Math.max(...gx, T[2]) + 6000, ay0 = Math.min(...gy, T[1]) - 6000, ay1 = Math.max(...gy, T[3]) + 6000;
+    const hw = Math.max(14000, (T[2] - T[0]) * 1.2), hh = Math.max(9000, (T[3] - T[1]) * 1.2);
+    return `<div class="hloc"><div class="row" style="justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><b>📍 Hol van a tervrajzon?</b><span class="hint">${esc(LV[li] ? LV[li][1] + ' (' + LV[li][2] + ')' : '')}${e.ax ? ' · tengely ' + esc(e.ax) : ''}${e.z0 != null ? ' · magasság ' + esc(zTxt(e)) + ' m' : ''}</span></div>
+      <div class="hlocg"><div>${view(cx - hw, cy - hh, cx + hw, cy + hh, 420, 280, true)}<div class="hint" style="margin-top:2px">Részlet: <span style="color:#E0218A;font-weight:700">■</span> ez a darab · <span style="color:#7FA7CF;font-weight:700">■</span> a rendszer többi eleme · <span style="color:#B8C2C9;font-weight:700">■</span> más rendszerek</div></div>
+      <div>${view(ax0, ay0, ax1, ay1, 420, 200, false)}<div class="hint" style="margin-top:2px">Teljes alaprajz – ${esc(LV[li] ? LV[li][1] : '')}</div></div></div>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><button class="b sm" data-fdloc="${esc(e.sys + '|' + e.n)}">A rendszer rajzán / 3D-ben</button></div></div>`;
+  }
   function helyCard(r) { const t = trkOf(r.pid), C = CINF(), adm = ISADM(), k = r.sys + '|' + r.n;
     const st = PH.map(([ph, lab, col]) => { const x = t[ph]; return `<div class="hst" style="border-left:6px solid ${x ? col : 'var(--line)'}"><b>${esc(lab)}</b><span>${x ? esc(phTxt(x)) : '—'}</span></div>`; }).join('');
     const btn = (ph, lab, ok) => ok ? (t[ph] ? `<button class="b hbig" disabled>✓ ${esc(lab)} – kész</button>` : `<button class="b pri hbig" data-hely="${ph}" data-pid="${esc(r.pid)}">✓ ${esc(lab)}</button>`) : '';
     return `<div class="card hcard"><div class="row" style="justify-content:space-between;gap:8px;align-items:baseline"><div style="font:700 22px var(--mono)">${esc(r.pid)}</div><div class="hint">${esc(r.tetel || r.type || '')} · ${esc(r.size || '')}${r.dm ? ' · ' + nf(r.dm, 2) + ' m²' : ''}${r.zt ? ' · +' + esc(r.zt) + ' m' : ''}</div></div>
       <div class="hsts">${st}</div>
+      ${(() => { try { return locPlan(r); } catch (e) { return ''; } })()}
       <div class="hbtns">${btn('kesz', 'Legyártva', adm || C.gyart)}${btn('helyszin', 'Kiszállítva', adm || C.gyart)}${btn('szerelve', 'Felszerelve', adm || C.szerel)}</div>
       ${fotoStrip(k, [...(adm || C.gyart ? ['gy'] : []), ...(adm || C.szerel ? ['sz'] : []), 'hiba'])}
       <details class="hhib"><summary>⚠ Hiba felvétele ehhez az idomhoz</summary>${hibaForm({ el: r.sys + ' / ' + r.n }, true)}</details></div>`; }
   function kvHely() {
     const adm = ISADM(), C = CINF(), found = HELY.pid ? helyFind(HELY.pid) : [];
     const mine = Object.values(NAPLO).filter(x => x && (!TUID || x.uid === TUID)).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 8);
-    let h = `<style>.hwrap{display:flex;flex-direction:column;gap:12px;max-width:640px}.hbig{min-height:52px;font-size:16px;flex:1 1 140px}.hbtns{display:flex;gap:8px;flex-wrap:wrap}.hsts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.hst{display:flex;flex-direction:column;padding:4px 8px;background:var(--panel2);border-radius:5px;font-size:13px}.hst span{color:var(--mute)}.hcard{padding:14px;display:flex;flex-direction:column;gap:10px}.hscan{min-height:64px;font-size:18px}#qrov{position:fixed;inset:0;background:#000;z-index:9500;display:flex;flex-direction:column}#qrov video{flex:1;width:100%;object-fit:cover}#qrov .qrb{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;gap:10px;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.7))}#qrov .qrf{position:absolute;left:50%;top:45%;width:min(70vw,320px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #E2B04A;border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.35)}#qrov .qrm{position:absolute;top:14px;left:0;right:0;text-align:center;color:#fff;font:600 15px var(--sans)}.hhib summary{cursor:pointer;color:var(--warn);font-weight:600;padding:6px 0}</style><div class="sec hwrap">`;
+    let h = `<style>.hwrap{display:flex;flex-direction:column;gap:12px;max-width:640px}.hbig{min-height:52px;font-size:16px;flex:1 1 140px}.hbtns{display:flex;gap:8px;flex-wrap:wrap}.hsts{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}.hst{display:flex;flex-direction:column;padding:4px 8px;background:var(--panel2);border-radius:5px;font-size:13px}.hst span{color:var(--mute)}.hcard{padding:14px;display:flex;flex-direction:column;gap:10px}.hloc{display:flex;flex-direction:column;gap:6px}.hlocg{display:grid;grid-template-columns:1fr;gap:8px}.hscan{min-height:64px;font-size:18px}#qrov{position:fixed;inset:0;background:#000;z-index:9500;display:flex;flex-direction:column}#qrov video{flex:1;width:100%;object-fit:cover}#qrov .qrb{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;gap:10px;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.7))}#qrov .qrf{position:absolute;left:50%;top:45%;width:min(70vw,320px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #E2B04A;border-radius:12px;box-shadow:0 0 0 2000px rgba(0,0,0,.35)}#qrov .qrm{position:absolute;top:14px;left:0;right:0;text-align:center;color:#fff;font:600 15px var(--sans)}.hhib summary{cursor:pointer;color:var(--warn);font-weight:600;padding:6px 0}</style><div class="sec hwrap">`;
     h += `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:10px">
       <div class="hint">${window.__SB ? `Bejelentkezve: <b>${esc(TNAME)}</b> – ${esc(adm ? 'admin' : cegNev(MYCEG()))}${adm ? '' : ' · rögzíthet: ' + [C.gyart ? 'gyártás, kiszállítás' : '', C.szerel ? 'szerelés' : ''].filter(Boolean).join(', ')}` : 'Önálló változat – a rögzítés ezen a gépen és az adatmappában marad.'}</div>
       <button class="b pri hscan" data-hscan="1">📷 QR-kód beolvasása</button>
