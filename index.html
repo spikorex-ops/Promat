@@ -13357,7 +13357,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v55 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v56 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -17223,8 +17223,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     { const st = document.createElement('style'); st.textContent = Sheet.CSS; document.head.appendChild(st); }
     $('#hdBoard').textContent = `PROMATECT-L500 ${S.P.BL} × ${S.P.BW} × ${S.P.t} mm`; $('#hdData').textContent = D.v; $('#hdVer').textContent = VER.split(' ')[0];
     renderSys(); renderSel(); renderTiles(); renderPane(); recompute();
-    if (!window.claude) {
-      // letöltött, önálló fájl: a böngésző saját mentése és nyomtatása használható
+    if (!window.claude || window.__SB) {
+      // önálló fájl vagy internetes változat (v56): a böngésző saját letöltése és nyomtatása: a böngésző saját mentése és nyomtatása használható
       STANDALONE = true;
       const MIME = { xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', html: 'text/html;charset=utf-8', csv: 'text/csv;charset=utf-8' };
       DL = { save: async r => { const ext = r.filename.split('.').pop(), blob = r.data instanceof Blob ? r.data : new Blob([r.data], { type: MIME[ext] || 'application/octet-stream' }); if (window.__adExport) { try { if (await window.__adExport(r.filename, blob)) return { status: 'saved' }; } catch (e) { } } const u = URL.createObjectURL(blob), l = document.createElement('a'); l.href = u; l.download = r.filename; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 10000); return { status: 'saved' }; } };
