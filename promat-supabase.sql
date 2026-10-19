@@ -1,5 +1,5 @@
 -- =====================================================================
--- Promat konszignáció – Supabase adatbázis (v59: + belépési / használati napló; v58: ember felvétele; v57: felhasználónév, menük, jelszó)
+-- Promat konszignáció – Supabase adatbázis (v70: + feladatkiosztás; v59: + belépési / használati napló; v58: ember felvétele; v57: felhasználónév, menük, jelszó)
 -- Bemásolandó: Supabase → SQL Editor → New query → Run. Többször is
 -- lefuttatható (minden "if not exists" / "or replace").
 --
@@ -90,6 +90,20 @@ $$;
 create or replace function public.docid(s text) returns text
 language sql immutable as $$ select regexp_replace(s, '[^A-Za-z0-9_~:@+-]', '_', 'g') $$;
 
+-- v70: feladatkiosztás – kié a feladat (címzett vagy a kijelölt csoport tagja / vezetője), ki zárhatja le (egyéni címzett vagy csoportvezető)
+create or replace function public.fel_enyem(d jsonb) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(d->'felh', '[]'::jsonb) ? auth.uid()::text
+      or exists (select 1 from public.docs g where g.col = 'csoport'
+                 and g.id in (select public.docid(x) from jsonb_array_elements_text(coalesce(d->'csop', '[]'::jsonb)) x)
+                 and (coalesce(g.data->'tagok', '[]'::jsonb) ? auth.uid()::text or g.data->>'vezeto' = auth.uid()::text)) $$;
+create or replace function public.fel_vezeto(d jsonb) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(d->'felh', '[]'::jsonb) ? auth.uid()::text
+      or exists (select 1 from public.docs g where g.col = 'csoport'
+                 and g.id in (select public.docid(x) from jsonb_array_elements_text(coalesce(d->'csop', '[]'::jsonb)) x)
+                 and g.data->>'vezeto' = auth.uid()::text) $$;
+
 -- mit olvashat egy nem-admin tag (árak, elszámolás, költségek: semmit)
 create or replace function public.doc_olvashato(p_col text, p_id text, p_data jsonb) returns boolean
 language plpgsql stable security definer set search_path = public as $$
@@ -98,6 +112,8 @@ begin
   if not public.is_tag() then return false; end if;
   if p_col in ('szereles','fotok','hibak','modositas','kezi') then return true; end if;
   if p_col = 'beall' and p_id in ('utem','fold','maradek') then return true; end if;
+  if p_col = 'csoport' then return true; end if;
+  if p_col = 'feladat' then return public.fel_enyem(p_data); end if;
   if p_col = 'naplo' and p_data->>'uid' = auth.uid()::text then return true; end if;
   if p_col = 'naplo_undo' then
     return exists (select 1 from public.docs n where n.col = 'naplo' and n.id = p_id and n.data->>'uid' = auth.uid()::text);
@@ -166,6 +182,20 @@ begin
   if p_col in ('naplo','naplo_undo') then
     if p_op = 'del' then raise exception 'not_granted' using errcode = '42501'; end if;
     if cur is not null and curby is distinct from me.user_id then raise exception 'not_granted' using errcode = '42501'; end if;
+    return;
+  end if;
+
+  if p_col = 'feladat' then
+    if p_op <> 'merge' or cur is null or not public.fel_enyem(cur) then raise exception 'not_granted: feladatot csak az admin oszthat ki / módosíthat' using errcode = '42501'; end if;
+    for k in select jsonb_object_keys(p_data) loop
+      if k = 'elf' then
+        if jsonb_typeof(p_data->'elf') <> 'object' or (select count(*) from jsonb_object_keys(p_data->'elf')) <> 1 or not (p_data->'elf' ? auth.uid()::text) then
+          raise exception 'not_granted: csak a saját elfogadásodat jelezheted' using errcode = '42501'; end if;
+      elsif k = 'kesz' then
+        if not public.fel_vezeto(cur) then raise exception 'not_granted: befejezettnek csak a csoportvezető (vagy az egyéni címzett) jelölheti' using errcode = '42501'; end if;
+        if jsonb_typeof(p_data->'kesz') <> 'object' then raise exception 'not_granted: lezárást csak az admin vonhat vissza' using errcode = '42501'; end if;
+      else raise exception 'not_granted: a feladatnál csak az elfogadás és a befejezés jelezhető' using errcode = '42501'; end if;
+    end loop;
     return;
   end if;
 
@@ -462,3 +492,7 @@ drop policy if exists promat_mod on storage.objects;
 create policy promat_mod on storage.objects for update to authenticated using (bucket_id = 'promat' and public.is_admin());
 drop policy if exists promat_tor on storage.objects;
 create policy promat_tor on storage.objects for delete to authenticated using (bucket_id = 'promat' and public.is_admin());
+
+-- v70: feladatkiosztás segédfüggvényei
+revoke execute on function public.fel_enyem(jsonb), public.fel_vezeto(jsonb) from anon, public;
+grant execute on function public.fel_enyem(jsonb), public.fel_vezeto(jsonb) to authenticated;
