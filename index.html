@@ -171,7 +171,7 @@ body{background:var(--bg)}
 .brand{align-items:center;gap:4px 12px;font-size:17px}.brand .logo{width:34px;height:34px;flex:none}.brand b{font-size:19px;letter-spacing:.01em}.brand .bt{display:flex;flex-direction:column;line-height:1.2}.brand .sub{color:#9CB7BF;font-size:12.5px}.brand .sub .mono{color:#C4D6DB}
 .topr{color:#C4D6DB}.topr .ver{color:#8FAAB3}.who{color:#9CB7BF}.who input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}.who input::placeholder{color:#8FAAB3}.who input[readonly]{background:transparent;border-color:transparent;font-weight:600;padding-left:0;width:auto}
 .topr .st{background:rgba(255,255,255,.08);border-radius:99px;padding:3px 10px}.topr .st span[style*="var(--ok)"]{color:#7EE2A8!important}.topr .st span[style*="var(--warn)"]{color:#FFC27A!important}
-.grid{grid-template-columns:248px minmax(0,1fr);gap:18px}
+.grid{gap:18px}@media (min-width:981px){.grid{grid-template-columns:248px minmax(0,1fr)}}@media (max-width:980px){.grid{grid-template-columns:minmax(0,1fr)}}
 /* menü */
 .nav{background:var(--side);border-color:var(--side);color:var(--sideink);padding:10px 8px;gap:1px;top:10px;max-height:calc(100vh - 20px);scrollbar-width:thin;scrollbar-color:#2C4552 transparent}
 .nav .ng{color:var(--sidemute);padding:14px 10px 6px;gap:8px;align-items:center;justify-content:flex-start;font-size:10.5px;letter-spacing:.09em}.nav .ng:first-child{padding-top:6px}
@@ -203,6 +203,30 @@ th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;background:#F1F5
 tbody tr:hover td{background:#F7FAFB}
 tr.tot td{background:#EEF4F5}
 .toast{border-radius:9px;box-shadow:0 8px 24px rgba(0,0,0,.25);padding:10px 16px}
+
+/* === v52 menü: fő kategóriánként külön blokk; telefonon kategória-gombsor === */
+.nav{gap:8px;padding:10px}
+.nsec{flex:none;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:10px;overflow:hidden}
+.nsec .ng{padding:10px 12px!important;color:#E4EEF2!important;font-size:11.5px!important;border-left:4px solid var(--gc);background:linear-gradient(90deg,color-mix(in srgb,var(--gc) 22%,transparent),transparent 75%)}
+.nsec .ng svg{color:var(--gc);opacity:1!important;width:16px!important;height:16px!important}
+.nsec .ng small{margin-left:auto;font:600 10.5px var(--mono);color:var(--sidemute);background:rgba(255,255,255,.07);border-radius:99px;padding:1px 7px;letter-spacing:0}
+.nsec .ng::after{margin-left:8px!important}
+.nsec.closed .ng{background:none}
+.nsec.has .ng{color:#fff!important}
+.nitems{display:flex;flex-direction:column;gap:1px;padding:4px 4px 6px}
+.nsec .ni[aria-current=true]::before{background:var(--gc)}.nsec .ni[aria-current=true] .nic{color:var(--gc)}.nsec .ni[aria-current=true]{background:linear-gradient(90deg,color-mix(in srgb,var(--gc) 28%,transparent),color-mix(in srgb,var(--gc) 8%,transparent))}
+.nsub{font:600 9.5px var(--sans);text-transform:uppercase;letter-spacing:.1em;color:var(--sidemute);padding:9px 12px 3px;opacity:.85}.nitems .nsub:first-child{padding-top:4px}.ndrop .nsub{padding:10px 12px 2px}
+#navtog{display:none!important}
+@media (max-width:900px){
+  .nav{position:static;max-height:none;display:flex!important;flex-direction:column;gap:8px;padding:8px}
+  .ncats{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+  .ncat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#DCE6EA;font:600 12px var(--sans);cursor:pointer;border-bottom:3px solid transparent}
+  .ncat svg{width:22px;height:22px;color:var(--gc)}
+  .ncat.cur{border-bottom-color:var(--gc)}.ncat.on{background:color-mix(in srgb,var(--gc) 26%,transparent);border-color:var(--gc);color:#fff}
+  .ndrop{display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--gc)}
+  .ndrop .ni{padding:11px 12px;font-size:15px}.ndrop .ni[aria-current=true]::before{background:var(--gc)}
+  .ncurl{display:flex;align-items:center;gap:8px;padding:6px 8px;color:#DCE6EA;font-size:13px;flex-wrap:wrap}.ncurl svg{width:18px;height:18px;color:var(--glow)}.ncurl span{color:var(--sidemute);font-size:12px;flex-basis:100%}
+}
 </style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 
 <div class="app">
@@ -13322,7 +13346,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v51 (2026-10-19)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v52 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14340,7 +14364,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
   /* ---------- alkalmazás-menü (bal oldal) és fejléc-sáv ---------- */
   const NAV = [['Gyártás előkészítés', [['k:gydash', 'Gyártás irányítópult'], ['elemek', 'Elemek'], ['konsz', 'Konszignáció'], ['lap', 'Gyártási lap'], ['szabas', 'Szabásterv'], ['felulet', 'Felület (m²)'], ['osszes', 'Összes rendszer']]],
-    ['Kivitelezés', [['k:hely', 'Helyszín – QR, telefon'], ['k:dash', 'Irányítópult (fő összesítő)'], ['k:attek', 'Áttekintés'], ['k:atnez', 'Nagy átnézet (tervrajz)'], ['k:idom', 'Rendszer idomonként'], ['k:rogz', 'Tömeges rögzítés'], ['k:rajz', 'Rajz – állapot'], ['k:eletut', 'Darab életút'], ['k:utem', 'Ütemterv'], ['k:keszlet', 'Készlet és maradék táblák'], ['k:jelentes', 'Állapotjelentés (heti / havi)'], ['k:napi', 'Napi jelentés'], ['k:foto', 'Fotók'], ['k:anyag', 'Anyagigény és rendelés']]],
+    ['Kivitelezés', [['k:dash', 'Irányítópult (fő összesítő)'], ['k:attek', 'Áttekintés'], ['k:atnez', 'Nagy átnézet (tervrajz)'], ['k:idom', 'Rendszer idomonként'], ['k:eletut', 'Darab életút'], ['k:hely', 'Helyszín – QR, telefon'], ['k:rogz', 'Tömeges rögzítés'], ['k:rajz', 'Rajz – állapot'], ['k:napi', 'Napi jelentés'], ['k:foto', 'Fotók'], ['k:utem', 'Ütemterv'], ['k:keszlet', 'Készlet és maradék táblák'], ['k:anyag', 'Anyagigény és rendelés'], ['k:jelentes', 'Állapotjelentés (heti / havi)']]],
     ['Elszámolás', [['k:edash', 'Elszámolás irányítópult'], ['k:fo', 'Fő összesítő'], ['k:telj', 'Teljesítések (m²)'], ['k:kimut', 'Szerelési kimutatás (aláíráshoz)'], ['k:fedezet', 'Fedezet rendszerenként'], ['k:tigell', 'TIG / számla ellenőrzés'], ['k:ossz', 'Elszámolás-összesítő'], ['k:biz', 'Alvállalkozói bizonylatok'], ['k:alv', 'Alvállalkozói elszámolás'], ['k:kin', 'Kínai teljesítésigazolás'], ['k:havi', 'Havi elszámolás']]],
     ['Nyilvántartás', [['k:hiba', 'Hibalista (átadás)'], ['k:akad', 'Akadályok'], ['k:elt', 'Eltérések a tervtől'], ['k:naplo', 'Műveletnapló']]],
     ['Beállítások', [['beall', 'Gyártási beállítások'], ['k:ceg', 'Szerelők és árak'], ['k:felh', 'Felhasználók és cégek'], ['k:ment', 'Mentések']]]];
@@ -14363,7 +14387,15 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const nav = document.getElementById('nav'); if (!nav) return; const cur = curPg();
     const nOpen = Object.values(PROB).filter(p => p && p.status !== 'megoldva').length, unpaid = Object.values(ALVB).filter(b => b && b.tipus === 'szamla' && !b.fizD && b.statusz !== 'kifizetve').length;
     const badge = k => k === 'k:akad' && nOpen ? `<b>${nOpen}</b>` : k === 'k:biz' && unpaid ? `<b style="background:var(--warn)">${unpaid}</b>` : k === 'k:ment' && PQ.length ? `<b style="background:var(--warn)">${PQ.length}</b>` : '';
-    let h = ''; for (const [g, items0] of NAV) { const items = items0.filter(i => navOk(i[0])); if (!items.length) continue; const closed = NAVC[g] === 0 && !items.some(i => i[0] === cur); h += `<div class="ng${closed ? ' closed' : ''}" data-ng="${esc(g)}">${svgI(GICO[g])}<span>${g}</span></div>`; if (!closed) h += items.map(([k, l]) => `<button class="ni" data-nav="${k}" aria-current="${cur === k}"><span class="nic">${svgI(NICO[k])}</span><span class="nil">${l}</span>${badge(k)}</button>`).join(''); }
+    const GCOL = { 'Gyártás előkészítés': '#E2B04A', 'Kivitelezés': '#3E9B5F', 'Elszámolás': '#5E9BD8', 'Nyilvántartás': '#E07A4A', 'Beállítások': '#9AA9B2' }, GSH = { 'Gyártás előkészítés': 'Gyártás', 'Kivitelezés': 'Kivitelezés', 'Elszámolás': 'Elszámolás', 'Nyilvántartás': 'Nyilvántartás', 'Beállítások': 'Beállítás' };
+    const groups = NAV.map(([g, it]) => [g, it.filter(i => navOk(i[0]))]).filter(x => x[1].length), SUBH = { 'k:dash': 'Áttekintés', 'k:hely': 'Rögzítés', 'k:utem': 'Tervezés, készlet, jelentés', 'k:fo': 'Kimutatások', 'k:biz': 'Alvállalkozók és kínai fél', 'elemek': 'Tervezés és gyártás', 'k:gydash': '', 'k:edash': '' }, item = ([k, l]) => (SUBH[k] ? `<div class="nsub">${SUBH[k]}</div>` : '') + `<button class="ni" data-nav="${k}" aria-current="${cur === k}"><span class="nic">${svgI(NICO[k])}</span><span class="nil">${l}</span>${badge(k)}</button>`;
+    let h = '';
+    if (navIsMob()) { // telefonon: fő kategóriák gombsora, a kiválasztott kategória oldalai lenyílva
+      h = `<div class="ncats">${groups.map(([g, it]) => `<button class="ncat${NAVCAT === g ? ' on' : ''}${it.some(i => i[0] === cur) ? ' cur' : ''}" data-ncat="${esc(g)}" style="--gc:${GCOL[g] || '#9AA9B2'}">${svgI(GICO[g])}<span>${GSH[g] || g}</span></button>`).join('')}</div>`;
+      const og = groups.find(x => x[0] === NAVCAT); if (og) h += `<div class="ndrop" style="--gc:${GCOL[og[0]] || '#9AA9B2'}">${og[1].map(item).join('')}</div>`;
+      else { const cg = groups.find(x => x[1].some(i => i[0] === cur)); if (cg) h += `<div class="ncurl">${svgI(NICO[cur])}<b>${esc(NAVL[cur] || '')}</b><span>${esc(GSH[cg[0]] || '')} – koppints egy kategóriára a többi oldalért</span></div>`; }
+    } else for (const [g, items] of groups) { const has = items.some(i => i[0] === cur), closed = NAVC[g] === 0 && !has;
+      h += `<section class="nsec${closed ? ' closed' : ''}${has ? ' has' : ''}" style="--gc:${GCOL[g] || '#9AA9B2'}"><div class="ng" data-ng="${esc(g)}">${svgI(GICO[g])}<span>${g}</span><small>${items.length}</small></div>${closed ? '' : `<div class="nitems">${items.map(item).join('')}</div>`}</section>`; }
     nav.innerHTML = h; navMob(nav, cur);
   }
   function renderCtx() {
@@ -15581,11 +15613,11 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
   // telefonon a menü összecsukva: egy „☰ Menü” gomb nyitja, oldalváltáskor bezárul – így a rögzítő oldal azonnal látszik
   let NAVOPEN = false;
-  function navMob(nav, cur) { let t = document.getElementById('navtog');
-    if (!t) { t = document.createElement('button'); t.id = 'navtog'; t.type = 'button'; nav.parentNode.insertBefore(t, nav); t.addEventListener('click', () => { NAVOPEN = !NAVOPEN; nav.classList.toggle('mopen', NAVOPEN); t.setAttribute('aria-expanded', String(NAVOPEN)); });
-      const st = document.createElement('style'); st.textContent = '#navtog{display:none}@media (max-width:900px){#navtog{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:48px;font:600 16px var(--sans);padding:10px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--ink);cursor:pointer}#nav:not(.mopen){display:none}}'; document.head.appendChild(st);
-      document.addEventListener('click', ev => { if (ev.target.closest && ev.target.closest('#nav [data-nav]') && NAVOPEN) { NAVOPEN = false; nav.classList.remove('mopen'); t.setAttribute('aria-expanded', 'false'); } }); }
-    t.innerHTML = `<span>☰ ${esc(NAVL[cur] || 'Menü')}</span><span style="color:var(--mute);font-weight:400">${NAVOPEN ? 'bezár ▲' : 'menü ▼'}</span>`; nav.classList.toggle('mopen', NAVOPEN); }
+  let NAVCAT = '', NAVW = null;
+  const navIsMob = () => { try { return window.matchMedia('(max-width:900px)').matches; } catch (e) { return false; } };
+  function navMob(nav, cur) { if (NAVW == null) { NAVW = navIsMob(); window.addEventListener('resize', () => { const m = navIsMob(); if (m !== NAVW) { NAVW = m; NAVCAT = ''; renderNav(); } }); } }
+  document.addEventListener('click', ev => { const c = ev.target.closest && ev.target.closest('[data-ncat]'); if (c) { ev.preventDefault(); ev.stopPropagation(); NAVCAT = NAVCAT === c.dataset.ncat ? '' : c.dataset.ncat; renderNav(); return; } if (NAVCAT && ev.target.closest && ev.target.closest('#nav [data-nav]')) NAVCAT = ''; }, true);
+
   /* ---------- Helyszín: QR-kód beolvasása → a darab → Legyártva / Kiszállítva / Felszerelve / Fotó / Hiba ---------- */
   let HELY = { pid: '', q: '', err: '', ceg: '' };
   const helyCeg = () => ISADM() ? (HELY.ceg || 'spiko') : MYCEG();
