@@ -13280,7 +13280,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v46 (2026-10-18)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v47 (2026-10-19)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -15973,44 +15973,46 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     else if (m === 'ft') s2 = `<div class="brstep"><span class="brn">2</span><span class="brlab">Milyen fotó</span><div class="brc">${['gy', 'sz', 'atv', 'egyeb'].map(k => `<button class="${BR.fph === k ? 'on' : ''}" data-brf="${k}" style="--c:${BRC.ft}"><i></i>${esc(FPH[k])}</button>`).join('')}</div><span class="hint">telefonon a kamera nyílik</span></div>`;
     const dated = !/^x/.test(m) && !['hg', 'ut', 'kh', 'ft', 'hb'].includes(m);
     const s3 = dated ? `<div class="brstep"><span class="brn">${s2 ? 3 : 2}</span><span class="brlab">Mikor</span><div class="brc brd"><button class="${!BR.d || BR.d === td ? 'on' : ''}" data-brd="ma" style="--c:#15222B"><i></i>Ma</button><button class="${BR.d === yday() ? 'on' : ''}" data-brd="tegnap" style="--c:#15222B"><i></i>Tegnap</button></div><input type="date" data-br="d" value="${esc(BR.d || '')}" class="brin" title="más nap"><label class="hint brpc" title="Több darabos egyenesnél kattintásra megkérdezi, melyik darab(ok)ra vonatkozik"><input type="checkbox" data-br="piece" ${BR.piece ? 'checked' : ''}> egyenesnél darabonként</label></div>` : `<div class="brstep"><span class="brlab" style="margin-left:34px"></span><label class="hint brpc"><input type="checkbox" data-br="piece" ${BR.piece ? 'checked' : ''}> egyenesnél darabonként</label></div>`;
+    const coll = BR.on && sm.ok && !BROPEN;
     const head = `<div class="brhead"><label class="brsw2"><input type="checkbox" data-br="on" ${BR.on ? 'checked' : ''}><span class="brtrack"><span></span></span><b>${BR.on ? 'Rögzítés BE' : 'Rögzítés kattintással'}</b></label>
       <div class="brsum ${sm.ok ? '' : 'bad'}" style="--c:${BRC[m]}">${BR.on ? (sm.ok ? `<span class="brk">${compact ? 'Kattintás =' : 'Kattintás az idomra ='}</span> <i></i><b>${esc(sm.t)}</b>` : `<b>⚠ ${esc(sm.t)}</b>`) : sm.ok ? `<span class="brk">Bekapcsolva ez lesz:</span> <i></i><b>${esc(sm.t)}</b>` : `<span class="brk">${esc(sm.t)}</span>`}</div>
+      ${coll ? '<button class="b sm brgear" data-brset="1" title="Mit · ki · mikor beállítása">⚙ módosít</button>' : BR.on && sm.ok ? '<button class="b sm pri brgear" data-brset="0" title="Beállítás kész – a sáv egy sorra csukódik">✓ kész</button>' : ''}
       ${H.length ? `<button class="b sm brun" data-brun="0" title="A legutolsó rögzítés visszavonása (Ctrl+Z)">↶ ${esc(H[0].sys + ' / ' + H[0].n)}</button>` : ''}</div>`;
-    const hist = !compact && H.length ? `<details class="brh" ${BRHO ? 'open' : ''} data-brho><summary class="hint" style="cursor:pointer">Korábbi rögzítések – bármelyik visszavonható vagy módosítható (${H.length})</summary><div class="brhl">${H.slice(0, 40).map((x, i) => `<span class="brhi"><b>${esc(x.sys)} / ${esc(String(x.n))}</b> ${esc(x.lab)} <small>${when(x)}${x.by ? ' · ' + esc(x.by) : ''}</small><button data-brun="${i}" title="Ennek a rögzítésnek a visszavonása">↶</button><button data-bred="${i}" title="Adatlap – módosítás">✎</button></span>`).join('')}${H.length > 40 ? `<a href="#" data-nav="k:naplo" class="hint">…a többi a Műveletnaplóban</a>` : ''}</div></details>` : '';
-    const help = !compact && !BR.on ? '<p class="hint brhelp">Állítsd be a három lépést, kapcsold BE, és a 3D-n vagy az alaprajzon az idomra kattintás azonnal rögzít. Céget választva automatikusan bekapcsol. Félrekattintás: ↶ vagy Ctrl+Z; átírás: válaszd a másik céget, és kattints újra.</p>' : '';
-    return `<div class="brbar2${BR.on ? ' on' : ''}${compact ? ' compact' : ''}" style="--mc:${BRC[m]}">${head}${compact ? `<details class="brset" ${(BRSO == null ? !(BR.on && sm.ok) : BRSO) ? 'open' : ''} data-brso><summary>beállítás (mit · ki · mikor) ▾</summary>` : ''}<div class="brsteps">${s1}${s2}${s3}</div>${compact ? '</details>' : ''}${help}${hist}</div>`;
+    const hist = !compact && !coll && H.length ? `<details class="brh" ${BRHO ? 'open' : ''} data-brho><summary class="hint" style="cursor:pointer">Korábbi rögzítések – bármelyik visszavonható vagy módosítható (${H.length})</summary><div class="brhl">${H.slice(0, 40).map((x, i) => `<span class="brhi"><b>${esc(x.sys)} / ${esc(String(x.n))}</b> ${esc(x.lab)} <small>${when(x)}${x.by ? ' · ' + esc(x.by) : ''}</small><button data-brun="${i}" title="Ennek a rögzítésnek a visszavonása">↶</button><button data-bred="${i}" title="Adatlap – módosítás">✎</button></span>`).join('')}${H.length > 40 ? `<a href="#" data-nav="k:naplo" class="hint">…a többi a Műveletnaplóban</a>` : ''}</div></details>` : '';
+    const help = '';
+    return `<div class="brbar2${BR.on ? ' on' : ''}${coll ? ' coll' : ''}${compact ? ' compact' : ''}" style="--mc:${BRC[m]}" title="Állítsd be: mit, ki, mikor – kapcsold BE, és az idomra kattintás azonnal rögzít. Félrekattintás: ↶ vagy Ctrl+Z.">${head}${coll ? '' : `<div class="brsteps">${s1}${s2}${s3}</div>`}${hist}</div>`;
   }
-  let BRSO = null; let V3FULL = false, I3FULL = false;
-  document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.dataset && d.dataset.brso != null) BRSO = d.open; }, true);
+  let BROPEN = true; let V3FULL = false, I3FULL = false;
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-brset]'); if (!b) return; ev.preventDefault(); ev.stopPropagation(); BROPEN = b.dataset.brset === '1'; if (!BROPEN) BR.on = true; renderPane(); }, true);
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-brd],[data-brf]'); if (!b) return; ev.stopPropagation(); ev.preventDefault();
     if (b.dataset.brd) BR.d = b.dataset.brd === 'ma' ? '' : yday(); else BR.fph = b.dataset.brf; brSave(); renderPane(); }, true);
   const BRCSS = `<style>
   .brbar2{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);border-left:5px solid var(--line)}
-  .brbar2.on{border-color:var(--mc);border-left-color:var(--mc);background:color-mix(in srgb,var(--mc) 6%,#fff);position:sticky;top:4px;z-index:30;box-shadow:0 6px 18px rgba(21,34,43,.14)}
+  .brbar2{gap:6px!important;padding:7px 10px!important}.brbar2.on{border-color:var(--mc);border-left-color:var(--mc);background:color-mix(in srgb,var(--mc) 6%,#fff)}.brbar2.coll{position:sticky;top:4px;z-index:30;box-shadow:0 4px 12px rgba(21,34,43,.14);padding:5px 10px!important}
   .brhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
   .brsw2{display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none}.brsw2 input{position:absolute;opacity:0;pointer-events:none}
-  .brtrack{width:44px;height:24px;border-radius:12px;background:#C3CCD3;position:relative;transition:background .15s;flex:none}.brtrack span{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
-  .brsw2 input:checked+.brtrack{background:var(--mc)}.brsw2 input:checked+.brtrack span{left:23px}.brsw2 input:focus-visible+.brtrack{outline:2px solid var(--accent);outline-offset:2px}.brsw2 b{font-size:15px}
-  .brsum{flex:1;min-width:260px;display:flex;align-items:center;gap:7px;padding:6px 10px;border-radius:7px;background:#fff;border:1px solid var(--line);font-size:14px}.brsum i{width:12px;height:12px;border-radius:3px;background:var(--c);flex:none}.brsum .brk{color:var(--mute)}
+  .brtrack{width:40px;height:22px;border-radius:11px;background:#C3CCD3;position:relative;transition:background .15s;flex:none}.brtrack span{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+  .brsw2 input:checked+.brtrack{background:var(--mc)}.brsw2 input:checked+.brtrack span{left:21px}.brsw2 input:focus-visible+.brtrack{outline:2px solid var(--accent);outline-offset:2px}.brsw2 b{font-size:15px}
+  .brsum{flex:1;min-width:240px;display:flex;align-items:center;gap:7px;padding:4px 10px;border-radius:7px;background:#fff;border:1px solid var(--line);font-size:14px}.brsum i{width:12px;height:12px;border-radius:3px;background:var(--c);flex:none}.brsum .brk{color:var(--mute)}
   .brbar2.on .brsum{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}.brsum.bad{background:#FDF0E8;border-color:#E3A27A;color:#8A2E0B}
-  .brsteps{display:flex;flex-direction:column;gap:7px}
+  .brsteps{display:flex;flex-direction:column;gap:5px}
   .brstep{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
-  .brn{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font:700 12px var(--sans);display:inline-flex;align-items:center;justify-content:center;flex:none}
-  .brlab{font-weight:600;min-width:92px;color:var(--ink)}
+  .brn{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font:700 12px var(--sans);display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .brlab{font-weight:600;min-width:78px;color:var(--ink);font-size:13px}
   .brmodes{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-  .brmb{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font:600 13.5px var(--sans);cursor:pointer;color:var(--ink);min-height:34px}
+  .brmb{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 10px;font:600 13px var(--sans);cursor:pointer;color:var(--ink);min-height:29px}
   .brmb i{width:12px;height:12px;border-radius:3px;background:var(--c);flex:none}.brmb:hover{border-color:var(--c)}
   .brmb.on{background:var(--c);border-color:var(--c);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.brmb.on i{background:#fff}.brmb.x{color:#9B2C2C}.brmb.x.on{color:#fff}
-  .brmore{position:relative}.brmore summary{list-style:none;cursor:pointer;border:1px dashed var(--line);border-radius:8px;padding:6px 10px;font:500 13px var(--sans);color:var(--mute);min-height:34px;display:flex;align-items:center}.brmore summary::-webkit-details-marker{display:none}
+  .brmore{position:relative}.brmore summary{list-style:none;cursor:pointer;border:1px dashed var(--line);border-radius:7px;padding:3px 10px;font:500 13px var(--sans);color:var(--mute);min-height:29px;display:flex;align-items:center}.brmore summary::-webkit-details-marker{display:none}
   .brmorel{position:absolute;z-index:40;top:calc(100% + 4px);left:0;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.16);min-width:210px}
-  .brin{font:13.5px var(--sans);padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;min-height:34px}
-  .brbar2 .brc{display:inline-flex;flex-wrap:wrap;gap:5px}.brbar2 .brc button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:17px;padding:5px 12px;font:600 13px var(--sans);cursor:pointer;color:var(--ink);min-height:32px}
+  .brin{font:13px var(--sans);padding:3px 8px;border:1px solid var(--line);border-radius:7px;background:#fff;min-height:29px}
+  .brbar2 .brc{display:inline-flex;flex-wrap:wrap;gap:5px}.brbar2 .brc button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:15px;padding:3px 11px;font:600 13px var(--sans);cursor:pointer;color:var(--ink);min-height:28px}
   .brbar2 .brc button i{width:11px;height:11px;border-radius:50%;background:var(--c)}.brbar2 .brc button.on{background:var(--c);border-color:var(--c);color:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.1)}.brbar2 .brc button.on i{background:#fff}
   .brpc{margin-left:auto}.brhelp{font-size:12.5px}
   .brbar2 .brh{font-size:12.5px;border-top:1px solid var(--line);padding-top:6px}
-  .brbar2.compact{padding:8px 10px;gap:6px;background:rgba(255,255,255,.97)}.brbar2.compact .brlab{min-width:70px}.brbar2.compact .brsum{min-width:200px;font-size:13px}.brbar2.compact .brpc{margin-left:0}
+  .brbar2.compact{padding:8px 10px;gap:6px;background:rgba(255,255,255,.97)}.brbar2.compact .brlab{min-width:70px}.brbar2.compact .brsum{min-width:0;font-size:13px}.brbar2.compact .brpc{margin-left:0}
   .brset summary{cursor:pointer;font-size:12.5px;color:var(--mute);padding:2px 0}.brset[open] summary{margin-bottom:6px}
-  .brfloat{display:none}.v3wrap.full .brfloat,.zv.i3full .brfloat{display:block;position:absolute;top:50px;left:12px;z-index:95;width:min(620px,calc(100vw - 24px));max-height:calc(100vh - 70px);overflow:auto}
+  .brfloat{display:none}.v3wrap.full .brfloat,.zv.i3full .brfloat{display:block;position:absolute;top:46px;left:10px;z-index:95;width:auto;max-width:min(600px,calc(100vw - 20px));max-height:calc(100vh - 70px);overflow:auto}.brfloat .brbar2.coll{box-shadow:0 2px 10px rgba(0,0,0,.18)}.brfloat .brbar2.coll .brsw2 b{display:none}.brfloat .brbar2.coll .brsum{min-width:0}
   .v3wrap.full .brfloat .brbar2.on,.zv.i3full .brfloat .brbar2.on{position:static}
   @media (max-width:700px){.brlab{min-width:0}.brpc{margin-left:0}}
   </style>`;
@@ -16041,7 +16043,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     else { for (const r of us) { const t = trkOf(r.pid); if (t.eg) { lock++; continue; } if (t.kesz || t.kiadva || t.helyszin) P(r, { kesz: null, kiadva: null, helyszin: null }); } lab = 'gyártás törölve'; }
     if (!ent.length) { toast(`${sys} / ${n}: ${lock ? 'elszámolásban van – nem módosítható' : 'nincs mit módosítani'}`); return; }
     const pt = us.length < nAll ? ' – ' + us.map(r => '#' + r.part).join(', ') + '. darab' : nAll > 1 ? ' (' + nAll + ' darab)' : '';
-    await szWrite(ent, sys + ' / ' + n + '. idom' + pt + ': ' + lab, { br: [sys, +n], lab: lab + (us.length < nAll ? ' (' + us.map(r => '#' + r.part).join(',') + ')' : '') }); toast(`${sys} / ${n}${pt}: ${lab}${lock ? ' · ' + lock + ' darab elszámolásban, kimaradt' : ''} – visszavonás: Ctrl+Z`); renderPane();
+    BROPEN = false; await szWrite(ent, sys + ' / ' + n + '. idom' + pt + ': ' + lab, { br: [sys, +n], lab: lab + (us.length < nAll ? ' (' + us.map(r => '#' + r.part).join(',') + ')' : '') }); toast(`${sys} / ${n}${pt}: ${lab}${lock ? ' · ' + lock + ' darab elszámolásban, kimaradt' : ''} – visszavonás: Ctrl+Z`); renderPane();
   }
   async function dampBrush(sys, k) {
     const r = dampK(sys, k); if (!r) return; const t = trkOf(r.pid), nm = sys + ' / ' + k + ' csappantyú';
@@ -16056,7 +16058,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (!patch) { toast(nm + ': nincs törölhető lépés'); return; }
     await szWrite([{ pid: r.pid, sys, patch }], nm + ': ' + lab, { br: [sys, k], lab }); toast(nm + ': ' + lab + ' – félrekattintás: Ctrl+Z'); renderPane();
   }
-  document.addEventListener('change', ev => { const t = ev.target; if (!t.dataset || t.dataset.br == null) return; const k = t.dataset.br; if (k === 'on') BR.on = t.checked; else if (k === 'piece') BR.piece = t.checked; else BR[k] = t.value; brSave(); renderPane(); }, true);
+  document.addEventListener('change', ev => { const t = ev.target; if (!t.dataset || t.dataset.br == null) return; const k = t.dataset.br; if (k === 'on') { BR.on = t.checked; if (BR.on && brSum().ok) BROPEN = false; else if (!BR.on) BROPEN = true; } else if (k === 'piece') BR.piece = t.checked; else BR[k] = t.value; brSave(); renderPane(); }, true);
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-brm]'); if (!b) return; BR.mode = b.dataset.brm; if (BR.mode === 'gy' && BR.ceg && ceg(BR.ceg).tip === 'kozos') BR.ceg = ''; brSave(); renderPane(); }, true);
   // idom-adatlap felugró ablakban (Nagy átnézet): méretek, hely, állapot, rögzítés
   let POP = null;
