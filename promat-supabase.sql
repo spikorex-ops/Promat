@@ -1,5 +1,5 @@
 -- =====================================================================
--- Promat konszignáció – Supabase adatbázis (v70: + feladatkiosztás; v59: + belépési / használati napló; v58: ember felvétele; v57: felhasználónév, menük, jelszó)
+-- Promat konszignáció – Supabase adatbázis (v75: + terepi réteg; v70: + feladatkiosztás; v59: + belépési / használati napló; v58: ember felvétele; v57: felhasználónév, menük, jelszó)
 -- Bemásolandó: Supabase → SQL Editor → New query → Run. Többször is
 -- lefuttatható (minden "if not exists" / "or replace").
 --
@@ -90,6 +90,9 @@ $$;
 create or replace function public.docid(s text) returns text
 language sql immutable as $$ select regexp_replace(s, '[^A-Za-z0-9_~:@+-]', '_', 'g') $$;
 
+-- v75: terepi réteg – a nem admin rögzítők saját rétegbe rögzítenek (col 'terep', id = <uid>_<rendszer>); a hivatalosat csak az admin írja
+create or replace function public.terep_on() returns boolean language sql stable as $$ select true $$;
+
 -- v70: feladatkiosztás – kié a feladat (címzett vagy a kijelölt csoport tagja / vezetője), ki zárhatja le (egyéni címzett vagy csoportvezető)
 create or replace function public.fel_enyem(d jsonb) returns boolean
 language sql stable security definer set search_path = public as $$
@@ -113,6 +116,7 @@ begin
   if p_col in ('szereles','fotok','hibak','modositas','kezi') then return true; end if;
   if p_col = 'beall' and p_id in ('utem','fold','maradek') then return true; end if;
   if p_col = 'csoport' then return true; end if;
+  if p_col = 'terep' then return p_data->>'uid' = auth.uid()::text; end if;
   if p_col = 'feladat' then return public.fel_enyem(p_data); end if;
   if p_col = 'naplo' and p_data->>'uid' = auth.uid()::text then return true; end if;
   if p_col = 'naplo_undo' then
@@ -151,7 +155,36 @@ begin
   select d.data, d.ceg_id, d.updated_by into cur, curceg, curby from public.docs d where d.col = p_col and d.id = p_id;
 
   if p_col = 'szereles' then
-    if p_op <> 'merge' then raise exception 'not_granted: darabállapotot csak hozzáadni lehet' using errcode = '42501'; end if;
+    raise exception 'not_granted: a hivatalos állapotot csak az admin rögzíti – a te rögzítésed a saját (terepi) rétegedbe kerül' using errcode = '42501';
+  end if;
+
+  if p_col = 'terep' then
+    if p_op = 'del' then raise exception 'not_granted: terepi jelölést csak az admin törölhet' using errcode = '42501'; end if;
+    if coalesce(p_data->>'uid', '') <> auth.uid()::text or (cur is not null and coalesce(cur->>'uid', '') <> auth.uid()::text)
+       or left(p_id, length(public.docid(auth.uid()::text)) + 1) <> public.docid(auth.uid()::text) || '_' then
+      raise exception 'not_granted: csak a saját rétegedbe rögzíthetsz' using errcode = '42501'; end if;
+    if coalesce(p_data->>'ceg', '') not in ('', me.ceg_id) then raise exception 'not_granted: más cég nevére nem rögzíthet' using errcode = '42501'; end if;
+    sysn := coalesce(cur->>'sys', p_data->>'sys');
+    if exists (select 1 from public.ceg_rendszer r where r.ceg_id = me.ceg_id)
+       and not exists (select 1 from public.ceg_rendszer r where r.ceg_id = me.ceg_id and r.sys = sysn) then
+      raise exception 'not_granted: ezen a rendszeren a cég nem rögzíthet (%)', sysn using errcode = '42501';
+    end if;
+    for k, v in select * from jsonb_each(coalesce(p_data->'p', '{}'::jsonb)) loop
+      for ph in select jsonb_object_keys(v) loop
+        if ph = 'pid' then continue; end if;
+        if ph in ('kesz','helyszin') and not c.gyart then raise exception 'not_granted: a cég nem gyárt' using errcode = '42501'; end if;
+        if ph = 'szerelve' and not c.szerel then raise exception 'not_granted: a cég nem szerel' using errcode = '42501'; end if;
+        if ph not in ('kesz','helyszin','szerelve') then raise exception 'not_granted: ezt a lépést (%) csak az admin rögzítheti', ph using errcode = '42501'; end if;
+        if jsonb_typeof(v->ph) = 'object' and coalesce(v->ph->>'ceg', '') not in ('', me.ceg_id) then
+          raise exception 'not_granted: más cég nevére nem rögzíthet' using errcode = '42501'; end if;
+        if coalesce((select d.data->'p'->k->ph->>'ceg' from public.docs d where d.col = 'szereles' and d.id = public.docid(sysn)), '') not in ('', me.ceg_id) then
+          raise exception 'not_granted: ezt a darabot már más cég rögzítette (hivatalos)' using errcode = '42501'; end if;
+      end loop;
+    end loop;
+    return;
+  end if;
+
+  if false then
     sysn := coalesce(cur->>'sys', p_data->>'sys', p_id);
     if exists (select 1 from public.ceg_rendszer r where r.ceg_id = me.ceg_id)
        and not exists (select 1 from public.ceg_rendszer r where r.ceg_id = me.ceg_id and (r.sys = sysn or public.docid(r.sys) = p_id)) then
@@ -496,3 +529,7 @@ create policy promat_tor on storage.objects for delete to authenticated using (b
 -- v70: feladatkiosztás segédfüggvényei
 revoke execute on function public.fel_enyem(jsonb), public.fel_vezeto(jsonb) from anon, public;
 grant execute on function public.fel_enyem(jsonb), public.fel_vezeto(jsonb) to authenticated;
+
+-- v75: terepi réteg
+revoke execute on function public.terep_on() from anon, public;
+grant execute on function public.terep_on() to authenticated;
