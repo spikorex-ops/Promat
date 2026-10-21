@@ -337,7 +337,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } };
   const b64d = s => { try { return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))))); } catch (e) { return null; } };
   const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const ROLEN = { admin: 'admin', cegvezeto: 'cégvezető', rogzito: 'rögzítő', olvaso: 'csak olvasás' };
+  const ROLEN = { admin: 'admin', cegvezeto: 'cégvezető', rogzito: 'rögzítő', olvaso: 'csak olvasás', vendeg: 'bemutató' };
 
   // ---------- kis kulcs-érték tár (IndexedDB): alapadatok és letöltött fotók offline gyorsítótára ----------
   const KV = (() => { let p = null; const open = () => p || (p = new Promise((res, rej) => { try { const r = indexedDB.open('promat-boot', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } }));
@@ -461,6 +461,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (!pr.p.aktiv) return screen(`<div class="err">A hozzáférésed ki van kapcsolva (${esc(pr.p.nev)}). Szólj a cégvezetődnek vagy Sándornak.</div><button id="pout" class="sec">Kijelentkezés</button>`), ($('#pout').onclick = () => sb.auth.signOut().then(() => location.reload()));
     PROF = pr.p; CEG = pr.c;
     let dat; try { dat = await loadData(PROF.szerep === 'admin'); } catch (e) { return screen(`<div class="err">Az alapadatok nem tölthetők be: ${esc(huErr(e))}</div><p class="mute">Az első indításhoz internet kell; utána a program térerő nélkül is elindul.</p><button onclick="location.reload()">Újra</button>`); }
+    if (!dat.data && PROF.szerep === 'vendeg') return screen('<div class="err">A bemutató még nincs előkészítve.</div><p class="mute">Az admin a Felhasználók oldalon tölti fel a bemutató adatcsomagot.</p><button id="pout" class="sec">Kijelentkezés</button>'), ($('#pout').onclick = () => sb.auth.signOut().then(() => location.reload()));
+    if (PROF.szerep === 'vendeg') vendegStore();
     if (!dat.data) return PROF.szerep === 'admin' ? showUpload() : screen('<div class="err">Az adatbázisban még nincsenek alapadatok (rendszerek, idomok). Az adminnak (Sándor) kell egyszer feltöltenie.</div><button onclick="location.reload()">Újra</button>');
     run(dat);
   }
@@ -476,6 +478,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     $('#pout').onclick = () => sb.auth.signOut().then(() => location.reload());
   }
 
+  // v87: bemutató fiók – a program helyi tárolója (gyorsítótár, beállítások) külön névtérben, így ugyanazon a gépen sem látszik a valódi fiók helyben tárolt adata
+  function vendegStore() { if (window.__VSTORE) return; window.__VSTORE = 1; const P = Storage.prototype, g = P.getItem, s = P.setItem, r = P.removeItem, ns = k => typeof k === 'string' && /^promat/.test(k) ? 'vendeg~' + k : k;
+    P.getItem = function (k) { return g.call(this, ns(k)); }; P.setItem = function (k, v) { return s.call(this, ns(k), v); }; P.removeItem = function (k) { return r.call(this, ns(k)); }; }
   // ---------- alapadatok: adat/data.json (modell) + adat/seed.json (árak – csak admin) ----------
   async function getStored(name) { // a tárolóban lévő változat dátuma alapján frissít; offline a gyorsítótárból
     const ck = 'f:' + name, cached = await KV.get(ck);
@@ -485,7 +490,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     const d = await sb.storage.from(BUCKET).download(name); if (d.error) { if (cached) return JSON.parse(cached.txt); throw d.error; }
     const txt = await d.data.text(); await KV.put(ck, { ver, txt }); return JSON.parse(txt);
   }
-  async function loadData(admin) { const data = await getStored('adat/data.json'); let seed = {}; if (admin && data) { try { seed = (await getStored('adat/seed.json')) || {}; } catch (e) { seed = {}; } } return { data, seed }; }
+  async function loadData(admin) { if (PROF && PROF.szerep === 'vendeg') return { data: await getStored('adat/demo.json'), seed: {} }; const data = await getStored('adat/data.json'); let seed = {}; if (admin && data) { try { seed = (await getStored('adat/seed.json')) || {}; } catch (e) { seed = {}; } } return { data, seed }; }
   function showUpload(err) {
     screen(`<h2>Alapadatok feltöltése (egyszer kell)</h2><p>A rendszerek, idomok és a beépített alapadatok (árak, TIG-ek, bizonylatok) a Supabase privát tárolójába kerülnek. A cégek csak a modellt kapják meg, az árakat nem.</p>
       <p class="mute">Válaszd ki a legfrissebb <b>promat-alapadatok-vNN.json</b> fájlt (a Program mappában).</p><div class="msg err" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
@@ -590,7 +595,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     mmStart();
     for (const id of ['pcore', 'papp']) { const src = document.getElementById(id); if (!src) continue; const s = document.createElement('script'); s.textContent = src.textContent; src.remove(); document.body.appendChild(s); }
     const u = document.createElement('div'); u.id = 'puser';
-    u.innerHTML = `<span class="net"></span><span title="${esc(dispU(PROF.email || USER.email))}">${esc(PROF.nev)} · ${esc(CEG ? CEG.nev : (PROF.ceg_id || ''))} · ${esc(ROLEN[PROF.szerep] || PROF.szerep)}</span><button id="pout" title="Kijelentkezés">Kilépés</button>`;
+    u.innerHTML = `<span class="net"></span><span title="${esc(dispU(PROF.email || USER.email))}">${esc(PROF.nev)} · ${esc(PROF.szerep === 'vendeg' ? 'bemutató hozzáférés' : CEG ? CEG.nev : (PROF.ceg_id || ''))} · ${esc(ROLEN[PROF.szerep] || PROF.szerep)}</span><button id="pout" title="Kijelentkezés">Kilépés</button>`;
     document.body.appendChild(u); document.body.classList.add('has-puser'); NET(); window.addEventListener('online', NET); window.addEventListener('offline', NET);
     $('#pout').onclick = () => { const pq = lsGet('promat-pending', []); if (pq.length && !confirm(pq.length + ' rögzítés még nincs feltöltve (nincs net?). Ha most kilépsz, ezen a gépen megmaradnak, és a következő belépéskor feltöltődnek.\n\nKilépsz?')) return; (window.__mmVege ? window.__mmVege() : Promise.resolve()).then(() => sb.auth.signOut()).then(() => location.reload()); };
   }
@@ -13461,7 +13466,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v86 (2026-10-21)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v87 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14235,7 +14240,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     finally { FLUSHING = false; szStatus(); }
   }
   function enqueue(o) { enqueueMany([o]); }
-  function enqueueMany(os) { const cols = new Set(); for (const o of os) { applyLocal(o); cols.add(o.col); } for (const c of cols) cacheSave(c); if (DBSTATE === 'off') { adSched(); return; } const t = Date.now(); for (const o of os) PQ.push(Object.assign({ t }, o)); pqSave(); flush(); szStatus(); }
+  const VENDEG = () => window.__ROLE === 'vendeg'; let VTOAST = 0;
+  function enqueueMany(os) { if (VENDEG()) { if (Date.now() - VTOAST > 2500) { VTOAST = Date.now(); toast('Bemutató mód: itt minden csak megtekinthető – a rögzítés és a módosítás nincs engedélyezve.'); } return; } const cols = new Set(); for (const o of os) { applyLocal(o); cols.add(o.col); } for (const c of cols) cacheSave(c); if (DBSTATE === 'off') { adSched(); return; } const t = Date.now(); for (const o of os) PQ.push(Object.assign({ t }, o)); pqSave(); flush(); szStatus(); }
   window.addEventListener('beforeunload', e => { if (PQ.length && DBSTATE !== 'off') { e.preventDefault(); e.returnValue = 'Van még el nem küldött rögzítés.'; } });
   const stTxt = () => DBSTATE === 'off' ? adTxt() : PQ.length ? `<span style="color:var(--warn)" title="A rögzítés helyben megvan, a közös adatbázisba küldés folyamatban vagy újrapróbálás alatt.">⏳ ${PQ.length} függő mentés</span>` : DBSTATE === 'wait' ? '<span>… kapcsolódás</span>' : `<span style="color:var(--ok)">✓ minden mentve${LASTOK ? ' · ' + new Date(LASTOK).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }) : ''}</span>`;
   function szStatus() { const e = document.getElementById('szstat'); if (e) e.innerHTML = stTxt(); }
@@ -14875,7 +14881,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     t.textContent = NAVL[cur] || ''; document.getElementById('pgSub').textContent = PGSUB[cur] || ''; { const c = document.getElementById('pgCrumb'); if (c) c.textContent = NAVG[cur] || ''; }
     document.getElementById('picker').style.display = PICK.has(cur) ? '' : 'none';
     const prep = PREP.has(cur); document.getElementById('tiles').style.display = prep ? '' : 'none'; const sl = document.querySelector('.selline'); if (sl) sl.style.display = prep ? '' : 'none';
-    document.getElementById('ctxAct').innerHTML = cur.startsWith('k:') && DL ? '<button class="b" data-sz="xlsx">Szerelés Excelben ⤓</button>' : '';
+    document.getElementById('ctxAct').innerHTML = cur.startsWith('k:') && DL && !VENDEG() ? '<button class="b" data-sz="xlsx">Szerelés Excelben ⤓</button>' : '';
     const nm = document.getElementById('szname'); if (nm && document.activeElement !== nm) nm.value = TNAME || ''; if (nm && window.__PROF) { nm.readOnly = true; nm.title = 'A belépett felhasználó neve – a rögzítések ezen a néven mennek.'; }
     szStatus();
   }
@@ -16161,7 +16167,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const NONADM = new Set(['k:tel', 'k:telsys', 'k:telidom', 'k:telmenu', 'k:telfel', 'k:feladat', 'k:hely', 'k:attek', 'k:atnez', 'k:idom', 'k:rogz', 'k:rajz', 'k:eletut', 'k:foto', 'k:hiba', 'k:naplo']);
   const PREPK = new Set(['k:gydash', 'elemek', 'konsz', 'lap', 'szabas', 'felulet']);
   // v57: a szerep adja az alapot (navBase), emberenként ebből a menüpontok kikapcsolhatók (profilok.tilt)
+  const VENDK = new Set(['osszes', 'elemek', 'konsz', 'lap', 'szabas', 'felulet', 'k:atnez', 'k:idom', 'k:tel', 'k:telsys', 'k:telidom', 'k:telmenu']);
   function navBase(k, role, cinf) {
+    if (role === 'vendeg') return VENDK.has(k);
     const adm = !role || role === 'admin';
     if (k === 'k:felh') return !!window.__SB && (adm || role === 'cegvezeto');
     if (k === 'k:aktiv') return !!window.__SB && adm;
@@ -16294,7 +16302,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     catch (e) { FH.st = 'hiba'; FH.err = e.message || String(e); }
     if (S.tab === 'kovet' && (KV === 'felh' || KV === 'feladat')) renderPane(); }
   const fhRpc = async (fn, a) => { const r = await window.__SB.rpc(fn, a); if (r.error) throw new Error(String(r.error.message || '').replace(/^not_granted:?\s*/, 'Nincs jogosultság: ')); return r.data; };
-  const SZN = { admin: 'admin', cegvezeto: 'cégvezető', rogzito: 'rögzítő', olvaso: 'csak olvasás' };
+  const SZN = { admin: 'admin', cegvezeto: 'cégvezető', rogzito: 'rögzítő', olvaso: 'csak olvasás', vendeg: 'bemutató (vendég)' };
   function fhLink(kod, cegId) { const c = window.__CFG || {}; const cn = (FH.cegek.find(x => x.id === cegId) || {}).nev || ''; return location.origin + location.pathname + '#m=' + window.__B64E({ u: c.u, k: c.k, c: kod, n: cn }); }
   const fhPw = () => { const a = 'abcdefghjkmnpqrstuvwxyz', r = new Uint32Array(9); crypto.getRandomValues(r); let s = ''; for (let i = 0; i < 5; i++) s += a[r[i] % a.length]; s += '-'; for (let i = 5; i < 9; i++) s += r[i] % 10; return s; };
   const fhUjTxt = u => `Promat program: ${location.origin + location.pathname}\nFelhasználónév: ${u.u}\nJelszó: ${u.pw}`;
@@ -16370,7 +16378,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const adm = ISADM(), cegs = adm ? FH.cegek : FH.cegek.filter(c => c.id === MYCEG()), cn = id => (FH.cegek.find(c => c.id === id) || {}).nev || id || '—';
     let h = `<div class="sec" style="gap:12px">${FH.err ? `<div class="badbox">${esc(FH.err)}</div>` : ''}`;
     // v58: új ember felvétele közvetlenül
-    const szOpts = adm ? ['rogzito', 'cegvezeto', 'olvaso', 'admin'] : ['rogzito', 'olvaso'];
+    const szOpts = adm ? ['rogzito', 'cegvezeto', 'olvaso', 'vendeg', 'admin'] : ['rogzito', 'olvaso'];
     h += `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><h2>Új ember felvétele</h2>
       <p class="hint">Add meg az adatait, és nyomd meg a Létrehozás gombot. Utána mondd meg neki a címet, a felhasználónevét és a jelszavát – ő csak belép. E-mail cím nem kell; ha mégis azzal lépne be, a felhasználónév helyére írd az e-mail címét.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:end">
@@ -16381,6 +16389,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         <label class="hint" style="display:flex;flex-direction:column;gap:3px">Szerep<select id="fns">${szOpts.map(s => opt(s, SZN[s], 'rogzito')).join('')}</select></label>
         <button class="b pri" data-fh="ujfelh">Létrehozás</button></div>
       ${FH.uj ? `<div class="okbox" style="display:flex;flex-direction:column;gap:6px"><div><b>${esc(FH.uj.nev)}</b> felvéve. Ezt add át neki:</div><pre class="mono" style="margin:0;white-space:pre-wrap;font-size:14px" id="fnout">${esc(fhUjTxt(FH.uj))}</pre><div class="row" style="gap:8px"><button class="b" data-fh="ujcopy">Másolás</button>${navigator.share ? '<button class="b" data-fh="ujshare">Megosztás…</button>' : ''}<span class="hint">Lent az Emberek listában a „Menük” gombbal állíthatod, mit lásson.</span></div></div>` : ''}</div>`;
+    if (adm) h += demoCard();
     // meghívó (ritkán kell: ha valaki maga regisztrál)
     h += `<details class="card" style="padding:14px"><summary><b>Meghívó link</b> <span class="hint">– ha inkább ő maga regisztrál</span></summary><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
       <p class="hint">A meghívó linket (vagy a kódot) küldd el neki SMS-ben / WhatsAppon. A linkre kattintva megnyílik a program, ő megadja a nevét, egy felhasználónevet (vagy az e-mail címét) és egy jelszót – és már rögzíthet a cége nevében. A link a megadott ideig és számú emberre érvényes.</p>
@@ -16952,7 +16961,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (!/^x/.test(m) && m !== 'hg' && m !== 'ut' && m !== 'kh' && m !== 'ft' && m !== 'hb') parts.push(dl);
     return { ok: true, t: parts.filter(Boolean).join(' · ') };
   }
-  function brushBar(compact) {
+  function brushBar(compact) { if (VENDEG()) return '<div class="hint" style="padding:4px 8px">Bemutató mód – a rögzítés itt nem érhető el.</div>';
     const m = BR.mode, cs = szList().filter(c => c.aktiv !== false && c.tip !== 'egyeb' && !(m === 'gy' && c.tip === 'kozos')), needC = m === 'gy' || m === 'sz', H = brH(), td = today(), UL = utemL(), sm = brSum();
     const when = x => { const d = x.at, ds = d.toISOString().slice(0, 10); return (ds === td ? '' : d.toLocaleDateString('hu-HU', { month: '2-digit', day: '2-digit' }) + ' ') + d.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }); };
     const mb = k => `<button class="brmb${m === k ? ' on' : ''}${k[0] === 'x' ? ' x' : ''}" data-brm="${k}" style="--c:${BRC[k]}"><i></i>${esc(BRL[k])}</button>`;
@@ -18110,6 +18119,29 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #C9D2D8;padding
       sh.push({ name: 'Tételes', rows: r, top: hr, head: 1, cols: [11, 7, 7, 16, 18, 16, 10, 12, 18, 11, 22, 16, 9, 9], merges: ['A1:N1', 'A2:N2'], land: true, foot, xs: 4, afEnd: hr + 1 + n, prt: 1 }); }
     return Xlsx.build(sh); }
   try { Object.defineProperty(window, '__hf', { value: { doc: () => hfDoc(), x: () => Array.from(hfXlsx()), agg: () => { const A = hfAgg(); return { m2: A.T.m2, db: A.T.db, ng: A.T.ng, gy: A.T.gy, ok: A.T.ok, plan: A.T.plan, csM: A.T.csM }; } }, configurable: true }); } catch (e) { }
+  /* ---------- v87: bemutató (vendég) – adatcsomag: csak a kiválasztott rendszerek modellje, rögzítés / cég / ár nélkül ---------- */
+  let DEMO = { sel: null, st: '', info: null };
+  function demoData(names) { const o = { v: D.v, grid: D.grid, levels: D.levels, gcat: D.gcat, sys: {}, ghost: {}, damp: {}, mesh: {} }, need = new Set();
+    for (const s of names) { if (D.sys[s]) o.sys[s] = D.sys[s]; if (D.ghost && D.ghost[s]) o.ghost[s] = D.ghost[s]; if (D.damp && D.damp[s]) o.damp[s] = D.damp[s]; }
+    for (const s in o.sys) for (const r of o.sys[s]) { if (r[23]) need.add(String(r[23])); if (r[27]) need.add(String(r[27])); }
+    for (const s in o.ghost) for (const g of o.ghost[s]) { const l = g[g.length - 1]; if (l && typeof l === 'object' && !Array.isArray(l) && l.m) need.add(String(l.m)); }
+    for (const k of need) if (D.mesh && D.mesh[k]) o.mesh[k] = D.mesh[k]; return o; }
+  async function demoInfo() { try { const r = await window.__SB.storage.from('promat').list('adat', { search: 'demo.json' }); const m = (r.data || []).find(x => x.name === 'demo.json'); DEMO.info = m ? { at: m.updated_at || m.created_at || '' } : false; } catch (e) { DEMO.info = false; } renderPane(); }
+  function demoCard() { if (DEMO.sel == null) DEMO.sel = new Set(((BEALL.demo || {}).sys || []).filter(s => NAMES.includes(s))); if (DEMO.info === null && window.__SB) { DEMO.info = undefined; setTimeout(demoInfo, 0); }
+    const all = Object.keys(D.sys || {}).sort((a, b) => NAMES.indexOf(a) - NAMES.indexOf(b));
+    return `<div class="card" style="padding:14px;display:flex;flex-direction:column;gap:8px"><h2>Bemutató (vendég) hozzáférés</h2>
+      <p class="hint">A „bemutató (vendég)” szerepű ember csak a programot láthatja: a kiválasztott néhány rendszer modelljét (Összes rendszer, Elemek, Konszignáció, Gyártási lap, Szabásterv, Felület, Nagy átnézet 3D, Rendszer idomonként). Nem lát semmilyen rögzítést (gyártott, kiszállított, felszerelt), pénzügyet, árat, alvállalkozót, megrendelőt, fotót; nem rögzíthet, nem módosíthat, nem tölthet le és nem nyomtathat. Ezt az adatbázis is kikényszeríti, nem csak a program felülete.
+      A fiókot fent, az „Új ember felvétele” résznél hozd létre, szerepnek a „bemutató (vendég)”-et választva (a cég mindegy, pl. Spiko-Rex).</p>
+      <div class="hint">Bemutató adatcsomag a tárolóban: <b>${DEMO.info ? 'feltöltve (' + esc(String(DEMO.info.at).slice(0, 16).replace('T', ' ')) + ')' : DEMO.info === false ? 'még nincs feltöltve – a vendég addig nem lát semmit' : 'ellenőrzés…'}</b></div>
+      <div class="hint">Mely rendszereket lássa? (${DEMO.sel.size} kiválasztva) <a href="#" data-demo="none">egyik sem</a></div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px">${all.map(s => `<button class="b sm${DEMO.sel.has(s) ? ' pri' : ''}" data-demos="${esc(s)}">${esc(s)}</button>`).join('')}</div>
+      <div class="row" style="gap:8px;align-items:center"><button class="b pri" data-demo="up" ${DEMO.sel.size ? '' : 'disabled'}>Bemutató adatcsomag feltöltése (${DEMO.sel.size} rendszer)</button><span class="hint">${esc(DEMO.st || 'Javaslat: 3–5 jellegzetes rendszer (pl. egy hosszú vízszintes és egy felszálló).')}</span></div></div>`; }
+  document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-demo],[data-demos]'); if (!b) return; ev.preventDefault(); ev.stopPropagation(); if (!ISADM()) return;
+    if (b.dataset.demos) { const s = b.dataset.demos; DEMO.sel.has(s) ? DEMO.sel.delete(s) : DEMO.sel.add(s); renderPane(); return; }
+    if (b.dataset.demo === 'none') { DEMO.sel = new Set(); renderPane(); return; }
+    if (b.dataset.demo === 'up') { const names = [...DEMO.sel]; DEMO.st = 'Feltöltés…'; renderPane();
+      try { const o = demoData(names), r = await window.__SB.storage.from('promat').upload('adat/demo.json', new Blob([JSON.stringify(o)], { type: 'application/json' }), { upsert: true, contentType: 'application/json' }); if (r.error) throw r.error; await docPut('beall', 'demo', { sys: names, at: new Date().toISOString() }); DEMO.st = 'Feltöltve: ' + names.join(', '); DEMO.info = null; toast('Bemutató adatcsomag feltöltve (' + names.length + ' rendszer).'); }
+      catch (e) { DEMO.st = 'Hiba: ' + (e.message || e); } renderPane(); } }, true);
 
   /* ---------- Szabásterv fül ---------- */
   function pcLabel(c) { return Sheet.pieceMark(c) + (c.copy ? ' (' + c.copy + '.)' : ''); }
@@ -18361,6 +18393,7 @@ table{border-collapse:collapse;width:100%}th,td{border:1px solid #C9D2D8;padding
     if (window.__TELMOD || /iPhone|iPad|Android/i.test(navigator.userAgent)) { const w = window.open('', '_blank'); if (w) { w.document.open(); w.document.write(h2); w.document.close(); setTimeout(() => { try { w.focus(); w.print(); } catch (e) { } }, 700); return; } }
     printDoc(h2); }
   async function saveFile(name, data) {
+    if (window.__ROLE === 'vendeg') { toast('Bemutató mód: letöltés, nyomtatás és export nem érhető el.'); return; }
     if (/\.html$/i.test(name) && typeof data === 'string') { const f = await askFmt(name); if (!f) { toast('Mentés megszakítva.'); return; } if (f === 'pdf') { pdfDoc(name, data); toast('PDF: a nyomtatási ablakban válaszd a „Mentés PDF-ként” célt.'); return; } }
     if (!DL) return;
     try { await DL.save({ filename: name, data }); toast('Mentve: ' + name); }
