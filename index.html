@@ -265,6 +265,7 @@ body.tel .main{padding-bottom:84px}
 #telband.gy{background:#B5650F}#telband.sz{background:#2D7A4A}
 #telband .tbi{font-size:24px}#telband .tbt{flex:1;display:flex;flex-direction:column;line-height:1.1}#telband .tbt b{font-size:17px;letter-spacing:.08em}#telband .tbt small{font-size:12px;opacity:.85}
 #telband button{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);color:#fff;border-radius:8px;padding:8px 10px;font:600 13px var(--sans,system-ui);min-height:40px;cursor:pointer}
+#telbar button.ir{color:#fff;font-weight:700}#telbar button.ir.gy{background:#B5650F}#telbar button.ir.sz{background:#2D7A4A}#telbar button.ir .iri{font-size:21px;line-height:24px}#telbar button.bk{color:#fff}
 body.tir-gy #telbar button.on{background:rgba(232,163,61,.28)}body.tir-sz #telbar button.on{background:rgba(62,155,95,.32)}
 body.tir-gy .ctx{border-left-color:#B5650F!important}body.tir-sz .ctx{border-left-color:#2D7A4A!important}
 .tirs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tirs button{display:flex;flex-direction:column;gap:2px;padding:14px 10px;border:2px solid #D5DCE1;border-radius:12px;background:#F7FAFB;font:inherit;cursor:pointer;text-align:left}.tirs button b{font-size:16px}.tirs button small{color:#5D6B74}
@@ -13440,7 +13441,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v75 (2026-10-20)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v76 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14502,7 +14503,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const TELK = ['k:tel', 'k:telsys', 'k:telidom', 'k:telmenu', 'k:telfel', 'k:feladat', 'k:hely', 'k:idom', 'k:hiba', 'k:foto', 'k:naplo', 'k:eletut', 'k:atnez'];
   let TELIR = ''; try { TELIR = localStorage.getItem('promat-tirany') || ''; } catch (e) { } // v67: 'gy' gyártás / 'sz' kivitelezés
   let TELFIL = null, TELFE = ''; let TELS = '', TELQ = '', TELF = 'hatra', TELN = null, TELT = 'idom', TELZ = false, TELBK = '';
-  const TELTAB = [['k:tel', 'Rendszerek', 'home'], ['k:hely', 'QR-kód', 'qr'], ['k:telmenu', 'Menü', 'menu']];
+  const TELTAB = [['__back', 'Vissza', 'back'], ['k:tel', 'Rendszerek', 'home'], ['k:hely', 'QR-kód', 'qr'], ['__ir', '', ''], ['k:telmenu', 'Menü', 'menu']];
   let TELMORE = false;
   function modSet(m) { try { localStorage.setItem('promat-mod', m); } catch (e) { } TEL = m === 'tel'; TELMORE = false; document.body.classList.toggle('tel', TEL); if (TEL) { S.tab = 'kovet'; KV = 'tel'; } const o = document.getElementById('modpick'); if (o) o.remove(); renderPane(); window.scrollTo(0, 0); }
   function modPick() { if (document.getElementById('modpick')) return; const o = document.createElement('div'); o.id = 'modpick';
@@ -14512,7 +14513,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       <button class="mpc${mob ? '' : ' rec'}" data-mod="asztal"><b>🖥 Asztali – teljes program</b><span>Minden oldal: gyártás, kivitelezés, elszámolás, kimutatások, beállítások.</span>${mob ? '' : '<i>ajánlott ezen a készüléken</i>'}</button></div>`;
     document.body.appendChild(o); }
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-mod]'); if (b) { ev.preventDefault(); ev.stopPropagation(); modSet(b.dataset.mod); return; }
-    const t = ev.target.closest && ev.target.closest('[data-teltab]'); if (t) { ev.preventDefault(); ev.stopPropagation(); const k = t.dataset.teltab; if (k === '__tobb') { TELMORE = !TELMORE; telBar(); return; } TELMORE = false; S.tab = 'kovet'; KV = k.slice(2); save(); fmSave(); renderPane(); window.scrollTo(0, 0); } }, true);
+    const t = ev.target.closest && ev.target.closest('[data-teltab]'); if (t) { ev.preventDefault(); ev.stopPropagation(); const k = t.dataset.teltab; if (k === '__tobb') { TELMORE = !TELMORE; telBar(); return; } if (k === '__back') { if (TELH.length) { try { history.back(); } catch (e) { telGoBack(); } } else telGoBack(); return; } if (k === '__ir') { telIrToggle(); return; } TELMORE = false; S.tab = 'kovet'; KV = k.slice(2); save(); fmSave(); renderPane(); window.scrollTo(0, 0); } }, true);
   setTimeout(() => { try { if (window.__SB && !localStorage.getItem('promat-mod')) modPick(); } catch (e) { }
     const tr = document.querySelector('.top .topr'); if (tr && !document.getElementById('modsw')) { const b = document.createElement('button'); b.id = 'modsw'; b.className = 'modsw'; b.dataset.mod = 'tel'; b.title = 'Telefonos (helyszíni) nézetre váltás'; b.textContent = '📱 Telefonos nézet'; tr.insertBefore(b, tr.firstChild); } }, 0);
   /* ---------- v67: telefonos kezdőlap (irány, QR, rendszerek), rendszer-lap, fotóhoz kötött rögzítés, csalásvédelem ---------- */
@@ -14783,8 +14784,18 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   document.addEventListener('change', ev => { const t = ev.target; if (!t || !t.dataset || t.dataset.tsel == null) return; if (t.checked) TRSEL.add(t.dataset.tsel); else TRSEL.delete(t.dataset.tsel); const n = TRSEL.size; for (const bb of document.querySelectorAll('[data-tatv],[data-tdel]')) { bb.disabled = !n; if (bb.dataset.tatv) bb.textContent = '✔ Kijelöltek átvezetése (' + n + ')'; } }, true);
   try { document.head.insertAdjacentHTML('beforeend', '<style>.laybar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:6px 10px;margin:0 0 8px;border:1px solid var(--line);border-radius:10px;background:#F6F8FA}.laybar select{font:inherit;padding:4px 6px}.lbn{color:#fff;font-weight:600;border-radius:6px;padding:3px 8px;font-size:13px}</style>'); } catch (e) { }
   function telBand() { let s = document.getElementById('telband'); document.body.classList.toggle('tir-gy', TEL && TELIR === 'gy'); document.body.classList.toggle('tir-sz', TEL && TELIR === 'sz');
-    if (!TEL || !TELIR) { if (s) s.remove(); return; } const top = document.querySelector('.top'); if (!s) { s = document.createElement('div'); s.id = 'telband'; if (top) top.insertAdjacentElement('afterend', s); else document.body.prepend(s); }
-    const gy = TELIR === 'gy'; s.className = gy ? 'gy' : 'sz'; s.innerHTML = `<span class="tbi">${gy ? '🏭' : '🔧'}</span><span class="tbt"><b>${gy ? 'GYÁRTÁS' : 'SZERELÉS'}</b><small>${gy ? 'legyártott darabok' : 'felszerelt darabok, helyszín'}</small></span><button data-telir="${gy ? 'sz' : 'gy'}">⇄ ${gy ? 'Szerelésre' : 'Gyártásra'}</button>`; }
+    if (s) s.remove(); }
+  /* v76: telefonos vissza-lépés – saját előzmény + a telefon vissza gombja (böngésző-előzmény) */
+  let TELH = [], TELHK = '', TELHS = null, TELHNO = false;
+  const telKey = () => [S.tab, KV, TELS, TELN, TELT, TELFE, HELY.pid || ''].join('|');
+  const telSnap = () => ({ kv: KV, s: TELS, n: TELN, t: TELT, fe: TELFE, hp: HELY.pid, hq: HELY.q, fil: TELFIL, bk: TELBK, tab: S.tab, y: window.scrollY });
+  function telTrack() { if (!TEL) return; const k = telKey(); if (!TELHK || k === TELHK) { if (!TELHK || !TELHS) TELHS = telSnap(); TELHK = k; return; }
+    if (!TELHNO && TELHS) { TELH.push(TELHS); if (TELH.length > 50) TELH.shift(); try { history.pushState({ promatTel: TELH.length }, ''); } catch (e) { } } TELHNO = false; TELHK = k; TELHS = telSnap(); }
+  function telGoBack() { const s = TELH.pop(); TELHNO = true; if (!s) { if (KV !== 'tel' || S.tab !== 'kovet') { S.tab = 'kovet'; KV = 'tel'; renderPane(); window.scrollTo(0, 0); } else TELHNO = false; return; }
+    KV = s.kv; TELS = s.s; TELN = s.n; TELT = s.t; TELFE = s.fe; HELY.pid = s.hp; HELY.q = s.hq; TELFIL = s.fil; TELBK = s.bk; S.tab = s.tab || 'kovet'; TELMORE = false; renderPane(); setTimeout(() => window.scrollTo(0, s.y || 0), 40); }
+  window.addEventListener('popstate', () => { if (TEL && !/[#&](d|m)=/.test(location.hash)) telGoBack(); });
+  window.addEventListener('scroll', () => { if (TEL && TELHS) TELHS.y = window.scrollY; }, { passive: true });
+  function telIrToggle() { TELIR = TELIR === 'gy' ? 'sz' : 'gy'; try { localStorage.setItem('promat-tirany', TELIR); } catch (e) { } telBand(); renderPane(); toast(TELIR === 'gy' ? '🏭 Gyártás irány' : '🔧 Szerelés irány'); }
   function kvTelMenu() { const nh = Object.values(HIBA || {}).filter(x => x && x.st !== 'ok').length, it = (k, ic, l, s) => navOk(k) ? `<button class="tmi" data-teltab="${k}"><span class="tmic">${ic}</span><span class="tmt"><b>${l}</b>${s ? `<small>${s}</small>` : ''}</span><span class="tar">›</span></button>` : '';
     const who = window.__TNAME || TNAME || '';
     return `<div class="sec tels"><div class="card telc"><b>Irány – mit rögzítesz?</b><div class="tirs"><button class="${TELIR === 'gy' ? 'on gy' : ''}" data-telir="gy"><b>🏭 Gyártás</b><small>legyártva, kiszállítva</small></button><button class="${TELIR === 'sz' ? 'on sz' : ''}" data-telir="sz"><b>🔧 Szerelés</b><small>felszerelve, helyszín</small></button></div></div>
@@ -14794,8 +14805,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-telout]'); if (!b) return; ev.preventDefault(); const o = document.getElementById('pout'); if (o) o.click(); }, true);
   function telBar() { telBand(); let b = document.getElementById('telbar'); if (!TEL) { if (b) b.remove(); const m = document.getElementById('telmore'); if (m) m.remove(); return; }
     if (!b) { b = document.createElement('nav'); b.id = 'telbar'; document.body.appendChild(b); } const cur0 = curPg(), cur = ['k:telsys', 'k:telidom'].includes(cur0) ? 'k:tel' : cur0;
-    const TI = { qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z', cube: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5', warn: 'M12 4l9 16H3zM12 10v4M12 17v.5', menu: 'M4 7h16M4 12h16M4 17h16', home: 'M4 11l8-7 8 7v9h-5v-6H9v6H4z' };
-    b.innerHTML = TELTAB.filter(([k]) => k === '__tobb' || navOk(k)).map(([k, l, ic]) => `<button data-teltab="${k}" class="${(k === cur && !TELMORE) || (k === '__tobb' && TELMORE) ? 'on' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="${TI[ic]}"/></svg><span>${l}</span></button>`).join('');
+    const TI = { qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z', cube: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5', warn: 'M12 4l9 16H3zM12 10v4M12 17v.5', menu: 'M4 7h16M4 12h16M4 17h16', home: 'M4 11l8-7 8 7v9h-5v-6H9v6H4z', back: 'M15 5l-7 7 7 7' };
+    b.innerHTML = TELTAB.filter(([k]) => k.startsWith('__') ? (k !== '__ir' || TELIR) : navOk(k)).map(([k, l, ic]) => k === '__ir' ? `<button data-teltab="__ir" class="ir ${TELIR}" title="Váltás: ${TELIR === 'gy' ? 'Szerelés' : 'Gyártás'}"><span class="iri">${TELIR === 'gy' ? '🏭' : '🔧'}</span><span>${TELIR === 'gy' ? 'Gyártás' : 'Szerelés'}</span></button>` : `<button data-teltab="${k}" class="${k === '__back' ? 'bk' : ''}${(k === cur && !TELMORE) ? ' on' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${k === '__back' ? 2.4 : 1.8}" stroke-linejoin="round" stroke-linecap="round"><path d="${TI[ic]}"/></svg><span>${l}</span></button>`).join('');
     let m = document.getElementById('telmore'); if (!TELMORE) { if (m) m.remove(); return; } if (!m) { m = document.createElement('div'); m.id = 'telmore'; document.body.appendChild(m); }
     const more = [['k:idom', '🧩 Rendszer idomonként (részletes, rajzzal)'], ['k:foto', '📷 Fotók'], ['k:eletut', '🔎 Darab életút'], ['k:naplo', '🕘 Saját rögzítéseim (napló)'], ['k:atnez', '🗺 Nagy átnézet (tervrajz) – nehéz, lassú lehet']].filter(([k]) => navOk(k));
     m.innerHTML = more.map(([k, l]) => `<button data-teltab="${k}">${l}</button>`).join('') + `<button data-telir="${TELIR === 'gy' ? 'sz' : 'gy'}" class="sec">${TELIR === 'gy' ? '🔧 Váltás: Kivitelezés' : '🏭 Váltás: Gyártás'}</button><button data-mod="asztal" class="sec">🖥 Váltás asztali nézetre</button>` + (document.getElementById('pout') ? `<button class="sec" onclick="document.getElementById('pout').click()">Kilépés</button>` : ''); }
@@ -14909,6 +14920,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       h += KV === 'gydash' ? kvGyDash() : KV === 'edash' ? kvEDash() : KV === 'hely' ? (TEL && TELBK ? telBack() : '') + kvHely() : KV === 'tel' ? kvTel() : KV === 'telsys' ? kvTelSys() : KV === 'telidom' ? kvTelIdom() : KV === 'telmenu' ? kvTelMenu() : KV === 'telfel' ? kvTelFel() : KV === 'feladat' ? kvFeladat() : KV === 'terep' ? kvTerep() : KV === 'felh' ? kvFelh() : KV === 'aktiv' ? kvAktiv() : KV === 'idom' ? kvIdom() : KV === 'atnez' ? kvAtnez() : KV === 'fo' ? kvFo() : KV === 'telj' ? kvTelj() : KV === 'kimut' ? kvKimut() : KV === 'utem' ? kvUtem() : KV === 'keszlet' ? kvKeszlet() : KV === 'jelentes' ? kvJelentes() : KV === 'dash' ? kvDash() : KV === 'foto' ? kvFoto() : KV === 'hiba' ? kvHiba() : KV === 'anyag' ? kvAnyag() : KV === 'fedezet' ? kvFedezet() : KV === 'tigell' ? kvTigell() : KV === 'biz' ? kvBiz() : KV === 'ossz' ? kvOssz() : KV === 'rogz' ? kvRogz() : KV === 'rajz' ? kvRajz() : KV === 'eletut' ? kvEletut() : KV === 'alv' ? kvAlv() : KV === 'kin' ? kvKin() : KV === 'naplo' ? kvNaplo() : KV === 'ment' ? kvMent() : KV === 'napi' ? kvNapi() : KV === 'havi' ? kvHavi() : KV === 'akad' ? kvAkad() : KV === 'elt' ? `<div class="sec"><p class="hint">Az Elemek fülön a „szerkeszt” gombbal, indokkal rögzíthető; mindenkinél érvényes.</p>${modTable(NAMES)}</div>` : KV === 'ceg' ? kvCeg() : kvAttek();
       if (EZK) h += '</div>';
     } catch (e) { h += `<p class="badbox">Hiba a megjelenítésben: ${esc(e.message)}</p>`; console.error(e); }
+    if (TEL) telTrack();
     return h;
   }
   document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.dataset && d.dataset.navg) { NAVC[d.dataset.navg] = d.open ? 1 : 0; try { localStorage.setItem('promat-navc', JSON.stringify(NAVC)); } catch (e) { } } }, true);
