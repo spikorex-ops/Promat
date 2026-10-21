@@ -13441,7 +13441,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v76 (2026-10-21)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v77 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -13733,7 +13733,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     return h;
   }
   // egy kész darab légcsatorna-felülete: egyenesnél a darabhossz arányában
-  const pidM2 = (el, u) => { const A = Core.ductArea(el, S.P); return (u && u.L != null && el.L && (el.t === 'E' || el.t === 'T' || el.t === 'Y') && u.np > 1) ? A * u.L / el.L : A; };
+  const pidM2 = (el, u, tot) => { const A = Core.ductArea(el, S.P); if (!(u && u.L != null && (el.t === 'E' || el.t === 'T' || el.t === 'Y') && u.np > 1)) return A; const T = tot || el.L; return T ? A * u.L / T : A; };
   // v60: a darab QR-kódjának tartalma – telefon kamerájával olvasva rendezett adatlap, alatta link a programba (a darabnál nyílik meg)
   const QRBASE = 'https://spikorex-ops.github.io/Promat/';
   function qrTxt(el, u, pid, dm) {
@@ -13751,10 +13751,13 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const zTxt0 = el => (el.z0 >= 0 ? '+' : '') + nf(el.z0, 1) + '…' + (el.z1 >= 0 ? '+' : '') + nf(el.z1, 1);
   function idRows(syss, GG) {
     const out = []; GG = GG || G;
-    for (const el of elsOf(syss || S.sel)) { if (!el.on) continue; const g = GG.per.get(el.key); if (!g || !g.pieces.length) continue; const q = Math.max(1, (S.ov[el.key] && S.ov[el.key].qty) || 1);
-      for (const u of Core.unitsOf(el, g)) for (let c = 1; c <= q; c++) {
-        const pcs = g.pieces.filter(p => p.pid === u.pid), marks = [...new Set(pcs.map(p => p.mark))].join(' ');
-        out.push({ el, kerd: isKerd(el), dm: pidM2(el, u), fm: el.t === 'E' && u.L != null ? u.L / 1000 : 0, pid: u.pid + (q > 1 ? '/' + c : ''), sys: el.sys, n: el.n, part: u.part, np: u.np, type: Core.typeName(el), size: Core.sizeText(el), L: u.L != null ? u.L : (el.t === 'K' ? el.ang + '°' : ''), ax: el.ax || '', lv: el.lv || '', z: el.manual ? '' : zTxt0(el), marks, npc: pcs.length, tok: pcs.filter(p => p.kind === 'tok').length, mer: pcs.filter(p => p.kind === 'mer').length, mod: el.mod, rid: el.manual ? '' : el.id, qr: qrTxt(el, u, u.pid + (q > 1 ? '/' + c : ''), pidM2(el, u)) });
+    for (const el of elsOf(syss || S.sel)) { if (!el.on) continue; const g = GG.per.get(el.key); const q = Math.max(1, (S.ov[el.key] && S.ov[el.key].qty) || 1);
+      // v77: gyártási lap nélküli, de gyártandó elem (pl. kör keresztmetszetű KE) is darab legyen – m²-rel, rögzíthetően
+      const US = g && g.pieces.length ? Core.unitsOf(el, g) : (el.t === 'KE' ? [{ pid: Core.pidOf(el, 1, 1), part: 1, np: 1, L: el.L || null, nopc: true }] : []); if (!US.length) continue;
+      const totL = US.reduce((s, u) => s + (u.L || 0), 0);
+      for (const u of US) for (let c = 1; c <= q; c++) {
+        const pcs = g ? g.pieces.filter(p => p.pid === u.pid) : [], marks = [...new Set(pcs.map(p => p.mark))].join(' ');
+        out.push({ el, kerd: isKerd(el), dm: pidM2(el, u, totL), fm: el.t === 'E' && u.L != null ? u.L / 1000 : 0, pid: u.pid + (q > 1 ? '/' + c : ''), sys: el.sys, n: el.n, part: u.part, np: u.np, type: Core.typeName(el), size: Core.sizeText(el), L: u.L != null ? u.L : (el.t === 'K' ? el.ang + '°' : ''), ax: el.ax || '', lv: el.lv || '', z: el.manual ? '' : zTxt0(el), marks, npc: pcs.length, tok: pcs.filter(p => p.kind === 'tok').length, mer: pcs.filter(p => p.kind === 'mer').length, mod: el.mod, rid: el.manual ? '' : el.id, qr: qrTxt(el, u, u.pid + (q > 1 ? '/' + c : ''), pidM2(el, u, totL)) });
       } }
     return out;
   }
@@ -13900,6 +13903,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   /* ---------- Gyártási lap fül ---------- */
   const lapEls = sys => elsOf([sys]).filter(e => e.on && G && G.per.get(e.key) && G.per.get(e.key).pieces.length && G.per.get(e.key).pieces[0].g);
   // a rendszer minden listaeleme a rajzhoz, állapottal: on | stub | shop | off
+  // v77: m²-ellenőrzés – minden listaelem: kategória, saját számítás, listabeli m², darabok, hely (csak adat, ár nélkül)
+  try { Object.defineProperty(window, '__m2audit', { value: () => { const GG = Core.generateAll(elsOf(NAMES).filter(e => e.on), S.P, S.ov); return elsOf(NAMES).map(e => { const g = e.on && GG && GG.per.get(e.key), us = g && g.pieces.length ? Core.unitsOf(e, g) : (e.on && e.t === 'KE' ? [{ pid: Core.pidOf(e, 1, 1), part: 1, np: 1, L: e.L || null }] : []); let vz = null; if (e.fr && e.fr.length >= 6) { const u = e.fr.slice(3, 6), l = Math.hypot(u[0], u[1], u[2]) || 1; vz = Math.abs(u[2] / l); } return { sys: e.sys, n: e.n, key: e.key, t: e.t, st: e.st, on: !!e.on, cat: catOf(e), a: e.a, b: e.b, c: e.c, d: e.d, L: e.L, ang: e.ang, rg: e.rg, z0: e.z0, z1: e.z1, vz, ax: e.ax, lv: e.lv, m2list: e.m2, area: Core.ductArea(e, S.P), units: us.map(u => ({ pid: u.pid, L: u.L, np: u.np, dm: pidM2(e, u, us.reduce((s, x) => s + (x.L || 0), 0)) })), manual: !!e.manual, id: e.id, mdiff: e.mdiff || '' }; }); }, configurable: true }); } catch (e) { }
   const catOf = el => el.on ? (isKerd(el) ? 'kerd' : 'on') : (isStub(el) && !(S.ov[el.key] && S.ov[el.key].off) ? 'stub' : (!el.manual && !S.P['st' + el.st] ? 'shop' : 'off'));
   // a rajzhoz: a bekapcsolt elemek a ténylegesen gyártott lapjaikkal (helyi → modell rendszer), a többi befoglaló dobozzal
   const drawEls = (sys, hlKey) => elsOf([sys]).filter(e => e.bx && e.bx.length).map(e => { const g = e.on && G && G.per.get(e.key); return { n: e.n, t: e.t, a: e.a, b: e.b, parts: g ? g.info.parts : null, bx: e.bx, fr: e.fr, mesh: (D.mesh && (D.mesh[e.mid] || (e.dmid && D.mesh[e.dmid]))) || null, pcs: g && e.fr ? g.pieces : null, shell: g && e.fr ? g.info.shell : null, axis: g && e.fr ? g.info.axis : null, miter: g && e.fr ? g.info.miter : null, hl: e.key === hlKey, cat: catOf(e) }; });
