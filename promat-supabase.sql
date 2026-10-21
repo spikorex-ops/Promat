@@ -29,7 +29,7 @@ create table if not exists public.profilok (
   nev text not null,
   email text,
   ceg_id text references public.cegek(id),
-  szerep text not null check (szerep in ('admin','cegvezeto','rogzito','olvaso')),
+  szerep text not null check (szerep in ('admin','cegvezeto','rogzito','olvaso','vendeg')),
   aktiv boolean not null default true,
   letrehozva timestamptz not null default now()
 );
@@ -37,7 +37,7 @@ create table if not exists public.profilok (
 create table if not exists public.meghivok (
   kod text primary key,
   ceg_id text references public.cegek(id) on delete cascade,
-  szerep text not null check (szerep in ('admin','cegvezeto','rogzito','olvaso')),
+  szerep text not null check (szerep in ('admin','cegvezeto','rogzito','olvaso','vendeg')),
   letrehozta uuid,
   lejar timestamptz not null,
   max_db int not null default 1,
@@ -81,7 +81,12 @@ language sql stable security definer set search_path = public as $$
 $$;
 create or replace function public.is_tag() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profilok p where p.user_id = auth.uid() and p.aktiv)
+  select exists (select 1 from public.profilok p where p.user_id = auth.uid() and p.aktiv and p.szerep <> 'vendeg')
+$$;
+-- v87: bemutató (vendég) – nem tag: semmilyen adatot nem olvas (cégek, rögzítések, fotók, modell), csak a bemutató adatcsomagot (adat/demo.json); nem ír semmit
+create or replace function public.is_vendeg() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.profilok p where p.user_id = auth.uid() and p.aktiv and p.szerep = 'vendeg')
 $$;
 create or replace function public.en_ceg() returns text
 language sql stable security definer set search_path = public as $$
@@ -150,6 +155,7 @@ begin
   if me.user_id is null then raise exception 'not_granted: nincs aktív belépés' using errcode = '42501'; end if;
   if me.szerep = 'admin' then return; end if;
   if me.szerep = 'olvaso' then raise exception 'not_granted: csak olvasási jog' using errcode = '42501'; end if;
+  if me.szerep = 'vendeg' then raise exception 'not_granted: bemutató hozzáférés – nem rögzíthet' using errcode = '42501'; end if;
   select * into c from public.cegek where id = me.ceg_id and aktiv;
   if c.id is null then raise exception 'not_granted: a cég nincs aktiválva' using errcode = '42501'; end if;
   select d.data, d.ceg_id, d.updated_by into cur, curceg, curby from public.docs d where d.col = p_col and d.id = p_id;
@@ -299,7 +305,7 @@ begin
     if p_ceg is distinct from me.ceg_id or p_szerep <> 'rogzito' then
       raise exception 'not_granted: cégvezető csak a saját cégébe hívhat rögzítőt' using errcode = '42501'; end if;
   elsif me.szerep <> 'admin' then raise exception 'not_granted' using errcode = '42501'; end if;
-  if p_szerep not in ('admin','cegvezeto','rogzito','olvaso') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
+  if p_szerep not in ('admin','cegvezeto','rogzito','olvaso','vendeg') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
   kod := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));
   insert into public.meghivok (kod, ceg_id, szerep, letrehozta, lejar, max_db)
   values (kod, p_ceg, p_szerep, auth.uid(), now() + make_interval(days => greatest(1, least(coalesce(p_napok, 14), 90))), greatest(1, least(coalesce(p_db, 1), 50)));
@@ -403,7 +409,7 @@ declare me public.profilok; u record;
 begin
   select * into me from public.profilok where user_id = auth.uid() and aktiv;
   if me.user_id is null then raise exception 'not_granted' using errcode = '42501'; end if;
-  if p_szerep not in ('admin','cegvezeto','rogzito','olvaso') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
+  if p_szerep not in ('admin','cegvezeto','rogzito','olvaso','vendeg') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
   if me.szerep = 'cegvezeto' then
     if p_ceg is distinct from me.ceg_id or p_szerep not in ('rogzito','olvaso') then
       raise exception 'not_granted: cégvezető csak a saját cégébe vehet fel rögzítőt / olvasót' using errcode = '42501'; end if;
@@ -445,7 +451,7 @@ create or replace function public.mm_kezd(p_eszkoz text) returns bigint
 language plpgsql security definer set search_path = public as $$
 declare nid bigint;
 begin
-  if not public.is_tag() then raise exception 'not_granted' using errcode = '42501'; end if;
+  if not (public.is_tag() or public.is_vendeg()) then raise exception 'not_granted' using errcode = '42501'; end if;
   delete from public.munkamenet where kezdet < now() - interval '180 days';
   insert into public.munkamenet (user_id, eszkoz) values (auth.uid(), left(coalesce(p_eszkoz, ''), 120)) returning id into nid;
   return nid;
@@ -495,7 +501,7 @@ revoke execute on all functions in schema public from anon;
 grant execute on function public.doc_set(text, text, jsonb), public.doc_merge(text, text, jsonb), public.doc_del(text, text), public.doc_batch(jsonb),
   public.admin_igenyles(text), public.meghivo_uj(text, text, int, int), public.csatlakozas(text, text), public.profil_allit(uuid, boolean, text),
   public.ceg_ment(text, text, text, boolean, boolean, boolean), public.ceg_rendszerek(text, text[]), public.meghivo_torol(text),
-  public.en_profil(), public.is_admin(), public.is_tag(), public.en_ceg(),
+  public.en_profil(), public.is_admin(), public.is_tag(), public.is_vendeg(), public.en_ceg(),
   public.kezelheti(uuid), public.profil_tilt(uuid, text[]), public.jelszo_allit(uuid, text),
   public.felh_letrehoz(uuid, text, text, text, text[]), public.mm_kezd(text), public.mm_jel(bigint, int, text), public.mm_vege(bigint) to authenticated;
 
@@ -517,7 +523,7 @@ insert into storage.buckets (id, name, public) values ('promat', 'promat', false
 
 drop policy if exists promat_olv on storage.objects;
 create policy promat_olv on storage.objects for select to authenticated using (
-  bucket_id = 'promat' and (public.is_admin() or (public.is_tag() and (name = 'adat/data.json' or name like 'foto/%'))));
+  bucket_id = 'promat' and (public.is_admin() or (public.is_tag() and (name = 'adat/data.json' or name like 'foto/%')) or (public.is_vendeg() and name = 'adat/demo.json')));
 drop policy if exists promat_ir on storage.objects;
 create policy promat_ir on storage.objects for insert to authenticated with check (
   bucket_id = 'promat' and (public.is_admin() or (public.is_tag() and (public.en_profil()).szerep in ('cegvezeto','rogzito') and name like 'foto/' || public.en_ceg() || '/%')));
