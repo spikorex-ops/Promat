@@ -13466,7 +13466,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v87 (2026-10-21)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v88 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -16385,7 +16385,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         <label class="hint" style="display:flex;flex-direction:column;gap:3px">Teljes név<input id="fnn" placeholder="pl. Kovács Péter" style="width:180px" autocomplete="off"></label>
         <label class="hint" style="display:flex;flex-direction:column;gap:3px">Felhasználónév<input id="fnu" placeholder="pl. kovacs.peter" style="width:150px" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
         <label class="hint" style="display:flex;flex-direction:column;gap:3px">Jelszó (min. 8)<input id="fnp" value="${esc(FH.pwj || (FH.pwj = fhPw()))}" style="width:120px" autocomplete="off" class="mono"></label>
-        <label class="hint" style="display:flex;flex-direction:column;gap:3px">Cég<select id="fnc">${cegs.filter(c => c.aktiv).map(c => opt(c.id, c.nev, MYCEG())).join('')}</select></label>
+        <label class="hint" id="fncw" style="display:flex;flex-direction:column;gap:3px">Cég<select id="fnc">${cegs.filter(c => c.aktiv).map(c => opt(c.id, c.nev, MYCEG())).join('')}</select></label><span class="hint" id="fncv" hidden style="align-self:center;padding:0 4px">Cég: <b>Bemutató</b> (automatikus)</span>
         <label class="hint" style="display:flex;flex-direction:column;gap:3px">Szerep<select id="fns">${szOpts.map(s => opt(s, SZN[s], 'rogzito')).join('')}</select></label>
         <button class="b pri" data-fh="ujfelh">Létrehozás</button></div>
       ${FH.uj ? `<div class="okbox" style="display:flex;flex-direction:column;gap:6px"><div><b>${esc(FH.uj.nev)}</b> felvéve. Ezt add át neki:</div><pre class="mono" style="margin:0;white-space:pre-wrap;font-size:14px" id="fnout">${esc(fhUjTxt(FH.uj))}</pre><div class="row" style="gap:8px"><button class="b" data-fh="ujcopy">Másolás</button>${navigator.share ? '<button class="b" data-fh="ujshare">Megosztás…</button>' : ''}<span class="hint">Lent az Emberek listában a „Menük” gombbal állíthatod, mit lásson.</span></div></div>` : ''}</div>`;
@@ -16426,7 +16426,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       if (a === 'copy' && FH.inv) { await navigator.clipboard.writeText(fhLink(FH.inv.kod, FH.inv.ceg)); toast('Link a vágólapon'); return; }
       if (a === 'share' && FH.inv) { await navigator.share({ title: 'Promat – meghívó', text: 'Meghívó a Promat rögzítő programba (kód: ' + FH.inv.kod + ')', url: fhLink(FH.inv.kod, FH.inv.ceg) }); return; }
       if (a === 'delinv') { if (!confirm('Visszavonod a meghívót (' + b.dataset.k + ')?')) return; await fhRpc('meghivo_torol', { p_kod: b.dataset.k }); if (FH.inv && FH.inv.kod === b.dataset.k) FH.inv = null; await fhLoad(); return; }
-      if (a === 'ujfelh') { const nev = document.getElementById('fnn').value.trim(), uRaw = document.getElementById('fnu').value.trim() || nev, pw = document.getElementById('fnp').value, ceg = document.getElementById('fnc').value, sz = document.getElementById('fns').value;
+      if (a === 'ujfelh') { const nev = document.getElementById('fnn').value.trim(), uRaw = document.getElementById('fnu').value.trim() || nev, pw = document.getElementById('fnp').value, sz = document.getElementById('fns').value, ceg = sz === 'vendeg' ? 'bemutato' : document.getElementById('fnc').value;
         if (!nev) { toast('Add meg a teljes nevét.'); return; } if (pw.length < 8) { toast('A jelszó legalább 8 karakter legyen.'); return; }
         const email = window.__TOEMAIL(uRaw); if (!uRaw.includes('@') && window.__UNORM(uRaw).length < 3) { toast('A felhasználónév legalább 3 betű legyen.'); return; }
         if (sz === 'admin' && !confirm(nev + ' admin lesz: mindent lát (árak, elszámolás) és mindent módosíthat. Biztos?')) return;
@@ -17659,6 +17659,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       await docPut('alvbiz', id, doc); logAdd('Bizonylat ' + (ed ? 'módosítva' : 'rögzítve') + ': ' + ceg(doc.ceg).nev + ' ' + doc.szam + ' (' + ft(netto) + ')', 0, 0, null); toast('Bizonylat mentve: ' + doc.szam); DRAFT.biz = {}; renderPane(); return; }
     if (f.id === 'cegf') { ev.preventDefault(); const fd = new FormData(f), nev = String(fd.get('nev') || '').trim(); if (!nev) return; const id = docId(nev.toLowerCase()).slice(0, 40) + '-' + Date.now().toString(36).slice(-4); await docPut('szerelok', id, { id, nev, cegnev: String(fd.get('cegnev') || '').trim(), tip: String(fd.get('tip') || 'alv'), aktiv: true, arak: [] }); toast('Hozzáadva: ' + nev); renderPane(); }
   });
+
+  document.addEventListener('change', ev => { const t = ev.target; if (!t || t.id !== 'fns') return; const v = t.value === 'vendeg', w = document.getElementById('fncw'), s = document.getElementById('fncv'); if (w) w.hidden = v; if (w) w.style.display = v ? 'none' : 'flex'; if (s) s.hidden = !v; });
 
   /* ---------- v83: Szerelési kimutatás – dinamikus irányítópult (időszak, bontás, csapatválasztó), szép Excel ----------
      A szűrő (KMF) közös a nyomtatható kimutatással, a rajzos csomaggal és az egyeztető lapokkal – amit itt beállítasz, azt kapod a dokumentumokban is.

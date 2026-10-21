@@ -69,6 +69,8 @@ insert into public.cegek (id, nev, tip, gyart, szerel) values
   ('kulanda', 'Kulánda Tibi', 'alv', true, true),
   ('kinai', 'Kínai csapat', 'kinai', false, true)
 on conflict (id) do nothing;
+-- v88: bemutató (vendég) fiókok „cége” – nem gyárt, nem szerel, nem aktív: sehol nem választható, csak a vendég fiókok tartoznak ide
+insert into public.cegek (id, nev, tip, gyart, szerel, aktiv) values ('bemutato', 'Bemutató', 'egyeb', false, false, false) on conflict (id) do nothing;
 
 -- ---------- segédfüggvények (ki vagyok én?) ----------
 create or replace function public.en_profil() returns public.profilok
@@ -306,6 +308,7 @@ begin
       raise exception 'not_granted: cégvezető csak a saját cégébe hívhat rögzítőt' using errcode = '42501'; end if;
   elsif me.szerep <> 'admin' then raise exception 'not_granted' using errcode = '42501'; end if;
   if p_szerep not in ('admin','cegvezeto','rogzito','olvaso','vendeg') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
+  if p_szerep = 'vendeg' then p_ceg := 'bemutato'; end if;
   kod := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 8));
   insert into public.meghivok (kod, ceg_id, szerep, letrehozta, lejar, max_db)
   values (kod, p_ceg, p_szerep, auth.uid(), now() + make_interval(days => greatest(1, least(coalesce(p_napok, 14), 90))), greatest(1, least(coalesce(p_db, 1), 50)));
@@ -410,6 +413,7 @@ begin
   select * into me from public.profilok where user_id = auth.uid() and aktiv;
   if me.user_id is null then raise exception 'not_granted' using errcode = '42501'; end if;
   if p_szerep not in ('admin','cegvezeto','rogzito','olvaso','vendeg') then raise exception 'invalid_argument: szerep' using errcode = '22023'; end if;
+  if p_szerep = 'vendeg' then p_ceg := 'bemutato'; end if;
   if me.szerep = 'cegvezeto' then
     if p_ceg is distinct from me.ceg_id or p_szerep not in ('rogzito','olvaso') then
       raise exception 'not_granted: cégvezető csak a saját cégébe vehet fel rögzítőt / olvasót' using errcode = '42501'; end if;
