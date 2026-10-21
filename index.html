@@ -13441,7 +13441,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v81 (2026-10-21)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v82 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -13478,6 +13478,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   const isStub = el => !el.manual && el.t === 'E' && el.L < S.P.shortMin;
   window.__manualAdd = m => { S.manual.push(m); manualSave(m); save(); buildSys(); renderSys(); schedule(); };
   window.__manualUpd = (id, patch) => { const m = S.manual.find(x => String(x.id) === String(id)); if (!m) return false; Object.assign(m, patch); manualSave(m); save(); buildSys(); renderSys(); schedule(); return true; };
+  window.__manualDel = id => { const k = 'm|' + id; if (!S.manual.some(m => String(m.id) === String(id))) return false; S.manual = S.manual.filter(m => String(m.id) !== String(id)); manualDel(String(id)); delete S.ov[k]; save(); buildSys(); renderSys(); schedule(); return true; };
   window.__manualList = sys => S.manual.filter(m => !sys || m.sys === sys).map(m => ({ id: m.id, sys: m.sys, nfix: m.nfix, L: m.L, ghost: m.ghost, hasFr: !!m.fr }));
   // kérdéses: a terv Promatnak jelöli, a shop-drawing horganyzottnak rajzolta (és még nincs tisztázva)
   const isKerd = el => !el.manual && el.st === 1 && !((S.ov[el.key] || {}).tisztazva);
@@ -17293,13 +17294,13 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       for (const pr of Sheet.ghostPrisms(g, D.mesh)) for (const f of pr.faces) TRI(f, pos);
       if (!pos.length) return; const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); const m = new T.Mesh(geo, new T.MeshBasicMaterial({ side: T.DoubleSide })); m.visible = false; m.userData.gi = sys + '|' + gi; GHM.push(m); }); }
     return GHM; }
-  function ghostDims(g) { const q = g[1]; let ls; if (q.length >= 12) ls = [[q[3], q[4], q[5]], [q[6], q[7], q[8]], [q[9], q[10], q[11]]].map(v => ({ l: Math.hypot(v[0], v[1], v[2]), z: Math.abs(v[2]) / (Math.hypot(v[0], v[1], v[2]) || 1) })); else ls = [{ l: Math.abs(q[3] - q[0]), z: 0 }, { l: Math.abs(q[4] - q[1]), z: 0 }, { l: Math.abs(q[5] - q[2]), z: 1 }];
+  function ghostDims(g) { const q = g[1]; let ls; if (q.length === 13) { const L = Math.hypot(q[3] - q[0], q[4] - q[1], q[5] - q[2]), r5 = v => Math.max(50, Math.round(v / 5) * 5), vz = Math.abs(q[5] - q[2]) / (L || 1), a1 = r5(q[6]), b1 = r5(q[7]), a2 = r5(q[8]), b2 = r5(q[9]); return { L: Math.round(L), a: a1, b: b1, c: (a2 !== a1 || b2 !== b1) ? a2 : null, d: (a2 !== a1 || b2 !== b1) ? b2 : null, vert: vz > 0.7 }; } if (q.length >= 12) ls = [[q[3], q[4], q[5]], [q[6], q[7], q[8]], [q[9], q[10], q[11]]].map(v => ({ l: Math.hypot(v[0], v[1], v[2]), z: Math.abs(v[2]) / (Math.hypot(v[0], v[1], v[2]) || 1) })); else ls = [{ l: Math.abs(q[3] - q[0]), z: 0 }, { l: Math.abs(q[4] - q[1]), z: 0 }, { l: Math.abs(q[5] - q[2]), z: 1 }];
     ls.sort((a, b) => b.l - a.l); const r5 = v => Math.max(50, Math.round(v / 5) * 5); return { L: Math.round(ls[0].l), a: r5(ls[1].l), b: r5(ls[2].l), vert: ls[0].z > 0.7 }; }
   async function ghostAdopt(key) { const [sys, gi0] = key.split('|'), gi = +gi0, g = ((D.ghost || {})[sys] || [])[gi]; if (!g) return; const dm = ghostDims(g), GC = D.gcat || [];
-    const v = prompt(`Felvétel Promat elemként – ${sys}\nA shop-modellben: ${GC[g[0]] || 'nem Promat'}${dm.vert ? ' · függőleges' : ''}\n\nBelső méret és hossz (mm): a × b × L – ellenőrizd, javíthatod:`, `${dm.a} × ${dm.b} × ${dm.L}`); if (v == null) return;
+    const v = prompt(`Felvétel Promat elemként – ${sys}\nA shop-modellben: ${GC[g[0]] || 'nem Promat'}${dm.vert ? ' · függőleges' : ''}\n\nBelső méret és hossz (mm): a × b × L – ellenőrizd, javíthatod:${dm.c ? `\nÁtmenet: a másik vége ${dm.c} × ${dm.d} mm` : ''}`, `${dm.a} × ${dm.b} × ${dm.L}`); if (v == null) return;
     const m0 = String(v).replace(/,/g, '.').match(/(\d+(?:\.\d+)?)\D+(\d+(?:\.\d+)?)\D+(\d+(?:\.\d+)?)/); if (!m0) { toast('A formátum: a × b × L, pl. 700 × 325 × 3400'); return; }
-    const a = Math.round(+m0[1]), b = Math.round(+m0[2]), L = Math.round(+m0[3]); if (!(a > 0 && b > 0 && L > 0)) { toast('Hibás méret.'); return; }
-    const maxN = Math.max(0, ...elsOf([sys]).map(e => +e.n || 0)); const m = { id: Date.now().toString(36), shared: !!TDB, by: TNAME || '', at: new Date().toISOString(), sys, t: 'E', a, b, c: null, d: null, L, ang: null, e1: null, e2: null, o: dm.vert ? 'f' : 'v', qty: 1, sub: '', bx: [g[1]], ghost: key, nfix: maxN + 1, gcat: GC[g[0]] || '', megj: 'shop-modellben ' + (GC[g[0]] || 'nem Promat') + ' – Promatként felvéve (' + (TNAME || '') + ')' };
+    const a = Math.round(+m0[1]), b = Math.round(+m0[2]), L = Math.round(+m0[3]); if (!(a > 0 && b > 0 && L > 0)) { toast('Hibás méret.'); return; } if (L > 15000 && !confirm(`A hossz ${nf(L / 1000, 1)} m – ez szokatlanul hosszú egy elemnek. Biztosan így veszed fel?`)) return;
+    const maxN = Math.max(0, ...elsOf([sys]).map(e => +e.n || 0)); const m = { id: Date.now().toString(36), shared: !!TDB, by: TNAME || '', at: new Date().toISOString(), sys, t: dm.c ? 'A' : 'E', a, b, c: dm.c || null, d: dm.d || null, L, ang: null, e1: null, e2: null, o: dm.vert ? 'f' : 'v', qty: 1, sub: '', bx: [g[1]], ghost: key, nfix: maxN + 1, gcat: GC[g[0]] || '', megj: 'shop-modellben ' + (GC[g[0]] || 'nem Promat') + ' – Promatként felvéve (' + (TNAME || '') + ')' };
     if (!window.__manualAdd) return; window.__manualAdd(m); UALL = null; ELXY = null; GHM = null;
     if (V3 && V3.R && V3.R.domElement) { try { V3.R.dispose(); } catch (e) { } } V3 = null; toast(`Felvéve: ${sys}-${m.nfix} · ${a}×${b} · ${L} mm · ${nf(2 * (a + b) * L / 1e6, 2)} m² – most már kijelölhető és rögzíthető.`); renderPane(); }
   try { Object.defineProperty(window, '__gh', { value: { list: () => { const AD = ADOPT(), DG = dampAll().g, o = []; for (const [s, arr] of Object.entries(D.ghost || {})) arr.forEach((g, gi) => { if ([0, 1, 7].includes(g[0]) && !AD.has(s + '|' + gi) && !DG.has(s + '|' + gi)) o.push(s + '|' + gi); }); return o; }, adopt: k => ghostAdopt(k), dims: k => { const [s, i] = k.split('|'); return ghostDims(D.ghost[s][+i]); }, pickN: () => ghPickMeshes().length }, configurable: true }); } catch (e) { }
