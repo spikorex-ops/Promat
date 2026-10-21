@@ -13441,7 +13441,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v78 (2026-10-21)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v79 (2026-10-21)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -15576,7 +15576,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function kmMatrixCard(R) { const X = kmMatrix(R); if (X.teams.length < 1 || X.M.size < 1) return ''; return `<details class="card" style="padding:0" ${KMF.mx ? 'open' : ''} data-kmmx><summary class="bzh" style="padding:8px 12px;cursor:pointer"><b>Rendszer × csapat (m²)</b> <span class="hint">– ${X.M.size} rendszer, ${X.teams.length} csapat</span></summary><div class="tw" style="border:0;border-radius:0;max-height:460px;overflow:auto">${kmMatrixHTML(R)}</div></details>`; }
   document.addEventListener('toggle', ev => { const d = ev.target; if (d && d.dataset && d.dataset.kmmx != null) KMF.mx = d.open; }, true);
   const KMPAL = ['#2a78d6', '#eb6834', '#1baf7a', '#c0504d', '#8a5cd0', '#e0a020', '#0e8a8a', '#d0569a', '#5b7d2a', '#8c6d3f', '#3d5a80', '#9c6644'];
-  function kmPlan(li, colOf) { const G0 = D.grid || { x: [], y: [], xl: [], yl: [] }, all = elsOf(NAMES).filter(e => e.bx && e.bx.length && !e.manual), on = all.filter(e => { const p = elXY(e); return p && p.li === li; }); if (!on.length) return '';
+  function kmPlan(li, colOf) { const G0 = D.grid || { x: [], y: [], xl: [], yl: [] }, all = elsOf(NAMES).filter(e => e.bx && e.bx.length), on = all.filter(e => { const p = elXY(e); return p && p.li === li; }); if (!on.length) return '';
     const qXY = q => { if (q.length >= 12) { let a = 1e12, b = 1e12, c = -1e12, d = -1e12; for (let i = 0; i < 8; i++) { const x = q[0] + (i & 1 ? q[3] : 0) + (i & 2 ? q[6] : 0) + (i & 4 ? q[9] : 0), y = q[1] + (i & 1 ? q[4] : 0) + (i & 2 ? q[7] : 0) + (i & 4 ? q[10] : 0); a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); } return [a, b, c, d]; } return [Math.min(q[0], q[3]), Math.min(q[1], q[4]), Math.max(q[0], q[3]), Math.max(q[1], q[4])]; };
     let x0 = Math.min(...G0.x) - 4000, x1 = Math.max(...G0.x) + 4000, y0 = Math.min(...G0.y) - 4000, y1 = Math.max(...G0.y) + 4000; for (const e of on) for (const q of e.bx) { const r = qXY(q); x0 = Math.min(x0, r[0]); y0 = Math.min(y0, r[1]); x1 = Math.max(x1, r[2]); y1 = Math.max(y1, r[3]); }
     const W = 1500, pad = 26, s = (W - pad - 8) / (x1 - x0), H = Math.round((y1 - y0) * s + pad + 8), X = v => pad + (v - x0) * s, Y = v => pad + (y1 - v) * s;
@@ -17109,7 +17109,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function i3Build() {
     const T = window.THREE, box = document.getElementById('i3box'); if (!T || !box || !IDDET) return null;
     const sys = IDDET.sys, GG = allUnits().g, byN = new Map(); for (const r of allUnits().rows) if (r.sys === sys) { if (!byN.has(r.n)) byN.set(r.n, []); byN.get(r.n).push(r); } for (const r of stubAll().rows) if (r.sys === sys && byN.has(r.host)) byN.set(r.n, byN.get(r.host));
-    const els = elsOf([sys]).filter(e => e.bx && e.bx.length && !e.manual);
+    const els = elsOf([sys]).filter(e => e.bx && e.bx.length);
     let x0 = 1e18, y0 = 1e18, z0 = 1e18, x1 = -1e18, y1 = -1e18, z1 = -1e18; for (const e of els) for (const b of e.bx) if (b.length === 6) { x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); z0 = Math.min(z0, b[2]); x1 = Math.max(x1, b[3]); y1 = Math.max(y1, b[4]); z1 = Math.max(z1, b[5]); }
     if (x0 > x1) return null; const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = (z0 + z1) / 2, P = (x, y, z) => [(x - cx) / 1000, (z - cz) / 1000, -(y - cy) / 1000];
     if (!I3R) { I3R = new T.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); I3R.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); I3R.setClearColor(0xf6f8f9); }
@@ -17367,7 +17367,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     let x0 = 1e18, y0 = 1e18, x1 = -1e18, y1 = -1e18; for (const e of elsOf(NAMES)) for (const b of (e.bx || [])) if (b.length === 6) { x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[3]); y1 = Math.max(y1, b[4]); }
     const W = 1180, pad = 34, sc = (W - 2 * pad) / (x1 - x0), H = Math.round((y1 - y0) * sc + 2 * pad), X = x => pad + (x - x0) * sc, Y = y => pad + (y1 - y) * sc;
     { const cols = new Map(), info = new Map(), lvs = new Map(); for (const e of elsOf(NAMES)) { if (!e.bx || !e.bx.length || e.manual) continue; const [lab, col] = colOf(e), k = e.sys + '|' + e.n; cols.set(k, col); lvs.set(k, lvOf(e)); const us = byE.get(k) || [], t0 = us.length ? trkOf(us[0].pid) : {}; info.set(k, { sys: e.sys, n: e.n, ty: Core.typeName(e), sz: Core.sizeText(e), lab, m2: us.reduce((q, r) => q + r.dm, 0), gy: t0.kesz && t0.kesz.ceg ? ceg(t0.kesz.ceg).nev : '', sze: t0.szerelve && t0.szerelve.ceg ? ceg(t0.szerelve.ceg).nev : '' }); }
-      const dimS = new Set(elsOf(NAMES).filter(e => e.bx && e.bx.length && !e.manual && dimOf(e)).map(e => e.sys + '|' + e.n));
+      const dimS = new Set(elsOf(NAMES).filter(e => e.bx && e.bx.length && dimOf(e)).map(e => e.sys + '|' + e.n));
       for (const r of dampAll().rows) { const k = r.sys + '|' + r.k; cols.set(k, dCol(r)); lvs.set(k, dLv(r)); if (dimC(r)) dimS.add(k); }
       // több darabos egyenesek: darabonként saját szín (a szabás szerinti darabolás)
       for (const e of elsOf(NAMES)) { const us = byE.get(e.sys + '|' + e.n); if (!us || us.length < 2) continue; const lv = lvOf(e); for (const r of us) { const k = e.sys + '|' + e.n + '#' + r.part; cols.set(k, colOfUs(e, [r])[1]); lvs.set(k, lv); if (dimUs([r])) dimS.add(k); } }
@@ -17377,7 +17377,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       if (us.length > 1 && AVW !== 'terv') for (const r of us) { const [lq, cq] = colOfUs(e, [r]), lg = legend.get(lq) || { col: cq, m2: 0, n: 0 }; lg.m2 += r.dm; lg.n++; legend.set(lq, lg); }
       else { const lg = legend.get(lab) || { col, m2: 0, n: 0 }; lg.m2 += m2; lg.n++; legend.set(lab, lg); }
       if (e.on) { const a = sysAgg.get(e.sys) || { m2: 0, gy: 0, sz: 0, kerd: 0, n: 0 }; for (const r of us) { const st = stageOf(trkOf(r.pid)); a.m2 += r.dm; if (st >= 2) a.gy += r.dm; if (st >= 4) a.sz += r.dm; if (r.kerd) a.kerd += r.dm; a.n++; } sysAgg.set(e.sys, a); } }
-    const elsAll = elsOf(NAMES).filter(e => e.bx && e.bx.length && !e.manual), band = li => li == null ? [-1e9, 1e9] : [LV[li][0] - 600, li + 1 < LV.length ? LV[li + 1][0] - 600 : 1e9];
+    const elsAll = elsOf(NAMES).filter(e => e.bx && e.bx.length), band = li => li == null ? [-1e9, 1e9] : [LV[li][0] - 600, li + 1 < LV.length ? LV[li + 1][0] - 600 : 1e9];
     const planSVG = li => { const [lo, hi] = band(li);
       let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Alaprajz állapot szerint" style="background:#fff">`;
       s += '<defs><pattern id="pxh' + (li == null ? 'm' : li) + '" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#7E93A3"/><line x1="0" y1="0" x2="0" y2="5" stroke="#fff" stroke-width="1.6"/></pattern></defs>';
