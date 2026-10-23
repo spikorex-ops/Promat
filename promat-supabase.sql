@@ -525,9 +525,39 @@ end $$;
 --   mentes/…         – teljes mentések: csak admin
 insert into storage.buckets (id, name, public) values ('promat', 'promat', false) on conflict (id) do nothing;
 
+-- v92: oktatóvideók – szerep szerinti alapértelmezés + admin által adott plusz videók (docs: beall / oktjog), tároló: promat/okt/NN.mp4
+create or replace function public.okt_sajat() returns text[]
+language plpgsql stable security definer set search_path = public as $$
+declare me public.profilok; g jsonb; r text[];
+begin
+  select * into me from public.profilok where user_id = auth.uid() and aktiv;
+  if me.user_id is null then return '{}'::text[]; end if;
+  if me.szerep = 'admin' then return array['01','02','03','04','05','06','07','08','09','10','11','12']; end if;
+  r := case me.szerep
+    when 'cegvezeto' then array['01','02','03','04','09','10','11','12']
+    when 'rogzito' then array['01','02','03','04','09','11']
+    when 'olvaso' then array['01','02','03']
+    when 'vendeg' then array['01','02','03']
+    else '{}'::text[] end;
+  select d.data into g from public.docs d where d.col = 'beall' and d.id = 'oktjog';
+  if g is not null then
+    r := r || coalesce(array(select jsonb_array_elements_text(coalesce(g->'role'->me.szerep, '[]'::jsonb))), '{}'::text[])
+           || coalesce(array(select jsonb_array_elements_text(coalesce(g->'user'->(auth.uid()::text), '[]'::jsonb))), '{}'::text[]);
+  end if;
+  return array(select distinct x from unnest(r) x order by 1);
+end $$;
+create or replace function public.okt_lathato(p_vid text) returns boolean
+language sql stable security definer set search_path = public as $$ select p_vid = any(public.okt_sajat()) $$;
+revoke execute on function public.okt_sajat(), public.okt_lathato(text) from anon, public;
+grant execute on function public.okt_sajat(), public.okt_lathato(text) to authenticated;
+
 drop policy if exists promat_olv on storage.objects;
 create policy promat_olv on storage.objects for select to authenticated using (
-  bucket_id = 'promat' and (public.is_admin() or (public.is_tag() and (name = 'adat/data.json' or name like 'foto/%')) or (public.is_vendeg() and name = 'adat/demo.json')));
+  bucket_id = 'promat' and (public.is_admin()
+    or (public.is_tag() and (name = 'adat/data.json' or name like 'foto/%'))
+    or (public.is_vendeg() and name = 'adat/demo.json')
+    or (name ~ '^okt/[0-9]{2}\.mp4$' and public.okt_lathato(substring(name from 5 for 2)))));
+
 drop policy if exists promat_ir on storage.objects;
 create policy promat_ir on storage.objects for insert to authenticated with check (
   bucket_id = 'promat' and (public.is_admin() or (public.is_tag() and (public.en_profil()).szerep in ('cegvezeto','rogzito') and name like 'foto/' || public.en_ceg() || '/%')));
