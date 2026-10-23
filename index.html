@@ -13476,7 +13476,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v100 (2026-10-23)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v101 (2026-10-23)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -18381,7 +18381,8 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   const mpN = (x, d) => (x == null || isNaN(x)) ? '–' : Number(x).toLocaleString('hu-HU', { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d || 0 });
   function mpRows() { const D = MP.d; if (!D) return []; if (D._rows) return D._rows; const F = D.F; D._rows = D.sup.map((a, i) => { const o = { i }; F.forEach((k, j) => { o[k] = a[j]; }); o.kat = /(^|_)SS/.test(o.typ) ? 'SS' : 'MHS'; o.fan = /GEN-(67|68|69|77)\b/.test(o.typ) || /[Ff]an/.test(o.layer || ''); o.egyedi = !!(o.duct && (o.rod || o.lvl)); o.jav = o.conf === 'javasolt'; return o; }); return D._rows; }
   async function mpLoad(force) { if (MP.st === 'tolt' || (MP.st === 'ok' && !force)) return; MP.st = 'tolt'; MP.err = '';
-    try { const sb = window.__SB; if (!sb) throw new Error('Az internetes változatban tölthető be (vagy válaszd ki a fájlt kézzel).'); const r = await sb.storage.from('promat').download('adat/mupro.json'); if (r.error) throw new Error(/not.?found|Object not found/i.test(r.error.message || '') ? 'nincs még feltöltve' : r.error.message); const txt = await r.data.text(); MP.d = JSON.parse(txt); MP.st = 'ok'; }
+    try { const sb = window.__SB; if (!sb) throw new Error('Az internetes változatban tölthető be (vagy válaszd ki a fájlt kézzel).'); let txt = null; try { const u = await sb.storage.from('promat').createSignedUrl('adat/mupro.json', 120); if (u && u.data && u.data.signedUrl) { const q = await fetch(u.data.signedUrl + '&t=' + Date.now(), { cache: 'no-store' }); if (q.ok) txt = await q.text(); } } catch (e) { } // mindig a legfrissebb (a böngésző-gyorsítótár megkerülésével)
+      if (txt == null) { const r = await sb.storage.from('promat').download('adat/mupro.json'); if (r.error) throw new Error(/not.?found|Object not found/i.test(r.error.message || '') ? 'nincs még feltöltve' : r.error.message); txt = await r.data.text(); } MP.d = JSON.parse(txt); MP.st = 'ok'; }
     catch (e) { MP.st = 'hiba'; MP.err = (e && e.message) || String(e); }
     if (S.tab === 'kovet' && (/^mp/.test(KV) || KV === 'idom')) renderPane(); }
   function mpFilt(rows, f, noMs) { f = f || MP.f; const G = (window.PROMAT_DATA || {}).grid, ms = noMs ? [] : MP.ms;
@@ -18619,7 +18620,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   document.addEventListener('change', async ev => { const t = ev.target; if (!t || !t.dataset) return;
     if (t.dataset.mpf) { MP.f[t.dataset.mpf] = t.value; MP.open = ''; MP.sel = null; renderPane(); return; }
     if (t.dataset.mpup && ISADM()) { const f = (t.files || [])[0]; if (!f) return; try { const txt = await f.text(), d = JSON.parse(txt); if (!d.sup || !d.types) throw new Error('nem Müpro adatfájl'); MP.d = d; MP.st = 'ok';
-        if (window.__SB) { const r = await window.__SB.storage.from('promat').upload('adat/mupro.json', new Blob([txt], { type: 'application/json' }), { upsert: true, contentType: 'application/json' }); if (r.error) throw r.error; toast('Müpro adat feltöltve (' + d.sup.length + ' tartó).'); } else toast('Müpro adat betöltve ebbe a munkamenetbe (' + d.sup.length + ' tartó).');
+        if (window.__SB) { const r = await window.__SB.storage.from('promat').upload('adat/mupro.json', new Blob([txt], { type: 'application/json' }), { upsert: true, contentType: 'application/json', cacheControl: '60' }); if (r.error) throw r.error; toast('Müpro adat feltöltve (' + d.sup.length + ' tartó).'); } else toast('Müpro adat betöltve ebbe a munkamenetbe (' + d.sup.length + ' tartó).');
       } catch (e) { toast('Hiba: ' + ((e && e.message) || e)); } renderPane(); } });
   document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('[data-mpms],[data-mpmsall],[data-mpmsclr],[data-mpboxclr],[data-mpdraw],[data-mpopen],[data-mpreset],[data-mpgo],[data-mpgo3d],[data-mpxls],[data-mpdoc],[data-mpsel],[data-mp3v],[data-mpfly]'); if (!b) return; const d = b.dataset;
     if (d.mpms != null) { ev.stopPropagation(); const i = MP.ms.indexOf(d.mpms); if (i >= 0) MP.ms.splice(i, 1); else MP.ms.push(d.mpms); MP.ms.sort((a, b) => a.localeCompare(b, 'hu', { numeric: true })); renderPane(); return; }
