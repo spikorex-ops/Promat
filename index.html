@@ -13484,7 +13484,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v104 (2026-10-24)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v105 (2026-10-24)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -17097,7 +17097,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (W.gy) h += `<div class="hvrow">Legyártotta: <b>${esc(W.gy)}</b></div>`; if (W.sz) h += `<div class="hvrow">Felszerelte: <b>${esc(W.sz)}</b></div>`;
     h += `<div class="hvhint">${BR.on ? 'Kattintás: ' + esc((BRM.find(m => m[0] === BR.mode) || [0, ''])[1].toLowerCase()) : 'Kattintás: adatlap, rögzítés'}</div>`; return h; }
   let HOVK = '', HOVT = 0;
-  function hovShow(k, x, y) { let t = document.getElementById('hovtip'); if (!k) { if (t) t.hidden = true; HOVK = ''; return; }
+  function hovShow(k, x, y) { let t = document.getElementById('hovtip'); if (k) { const mt = document.querySelector('.mp3tip'); if (mt && mt.style.display === 'block') k = null; } if (!k) { if (t) t.hidden = true; HOVK = ''; return; }
     if (!t) { t = document.createElement('div'); t.id = 'hovtip'; document.body.appendChild(t); }
     if (k !== HOVK) { const h = hovHTML(k); if (!h) { t.hidden = true; HOVK = ''; return; } t.innerHTML = h; HOVK = k; }
     t.hidden = false; const W = t.offsetWidth, H = t.offsetHeight; t.style.left = Math.min(window.innerWidth - W - 8, x + 16) + 'px'; t.style.top = (y + 18 + H > window.innerHeight ? y - H - 12 : y + 18) + 'px'; }
