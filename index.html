@@ -13485,7 +13485,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v109 (2026-10-24)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v110 (2026-10-24)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -18509,7 +18509,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     try { const sb = window.__SB; if (!sb) throw new Error('Az internetes változatban tölthető be (vagy válaszd ki a fájlt kézzel).'); let txt = null; try { const u = await sb.storage.from('promat').createSignedUrl('adat/mupro.json', 120); if (u && u.data && u.data.signedUrl) { const q = await fetch(u.data.signedUrl + '&t=' + Date.now(), { cache: 'no-store' }); if (q.ok) txt = await q.text(); } } catch (e) { } // mindig a legfrissebb (a böngésző-gyorsítótár megkerülésével)
       if (txt == null) { const r = await sb.storage.from('promat').download('adat/mupro.json'); if (r.error) throw new Error(/not.?found|Object not found/i.test(r.error.message || '') ? 'nincs még feltöltve' : r.error.message); txt = await r.data.text(); } MP.d = JSON.parse(txt); MP.st = 'ok'; }
     catch (e) { MP.st = 'hiba'; MP.err = (e && e.message) || String(e); }
-    if (S.tab === 'kovet' && (/^mp/.test(KV) || KV === 'idom')) renderPane(); }
+    if (S.tab === 'kovet' && (/^mp/.test(KV) || /^(idom|teltarto|telsys)$/.test(KV))) renderPane(); }
   function mpFilt(rows, f, noMs) { f = f || MP.f; const G = (window.PROMAT_DATA || {}).grid, ms = noMs ? [] : MP.ms;
     const xr = (G && (f.ax0 !== '' || f.ax1 !== '')) ? [G.x[f.ax0 !== '' ? +f.ax0 : 0], G.x[f.ax1 !== '' ? +f.ax1 : G.x.length - 1]].sort((a, b) => a - b) : null, yr = (G && (f.ay0 !== '' || f.ay1 !== '')) ? [G.y[f.ay0 !== '' ? +f.ay0 : 0], G.y[f.ay1 !== '' ? +f.ay1 : G.y.length - 1]].sort((a, b) => a - b) : null;
     if (xr && xr[1] - xr[0] < 1) { xr[0] -= 3000; xr[1] += 3000; } if (yr && yr[1] - yr[0] < 1) { yr[0] -= 3000; yr[1] += 3000; } // egy tengely: ±3 m sáv
@@ -18572,7 +18572,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   function mpGate() { setTimeout(() => mpLoad(), 0);
     const up = `<label class="b ${MP.st === 'ok' ? '' : 'pri'}" style="cursor:pointer">⤒ ${MP.st === 'ok' ? 'Új Müpro adat feltöltése' : 'Müpro adat (mupro.json) feltöltése'}<input type="file" accept=".json,application/json" data-mpup="1" hidden></label>`;
     if (MP.st === 'ok') return null;
-    if (MP.st === 'hiba') return `<div class="sec"><div class="card"><h2>Müpro tartószerkezet</h2><p>${/nincs még/.test(MP.err) ? 'A Müpro adat még nincs feltöltve.' : 'Nem sikerült betölteni: ' + esc(MP.err)}</p><p class="hint">A mupro.json a Müpro DWG-terveiből és PDF-darabjegyzékeiből készült (Claude). Csak az admin tölthet fel és láthat – a privát tárolóba kerül (adat/mupro.json).</p>${up}</div></div>`;
+    if (MP.st === 'hiba') return `<div class="sec"><div class="card"><h2>Müpro tartószerkezet</h2><p>${/nincs még/.test(MP.err) ? 'A Müpro adat még nincs feltöltve.' : 'Nem sikerült betölteni: ' + esc(MP.err)}</p><p class="hint">A mupro.json a Müpro DWG-terveiből és PDF-darabjegyzékeiből készült (Claude). Csak az admin tölthet fel; a telefonos tartó-nézetet minden belépett tag látja (a privát tárolóból, adat/mupro.json).</p>${up}</div></div>`;
     return '<div class="sec"><p class="hint">Müpro adat betöltése…</p></div>'; }
   function kvMpDash() { const g = mpGate(); if (g) return g; const D = MP.d, RA = mpRows(), R = RA.filter(r => !r.jav), RJ = RA.filter(r => r.jav), GP = D.gaps || [];
     const by = (f) => { const m = new Map(); for (const r of R) { const k = f(r); m.set(k, (m.get(k) || 0) + 1); } return m; };
@@ -19136,7 +19136,8 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     else if (k === 'mptip') { MP.tipOpen = t; go('kovet', 'mptip'); setTimeout(() => { const e = document.querySelector(`[data-mptipd="${t}"]`); if (e) e.scrollIntoView({ block: 'start' }); }, 250); } }
   /* ---------- v103: TELEFONOS NÉZET – Müpro tartószerkezet a helyszínen (rendszer → tartók T-számmal → tartó lapja: hol van, rajz, tételek, csomópontok, felszerelve) ---------- */
   let MPT = { sys: '', sel: null, f: 'hatra', q: '', map: false, i3: false };
-  const mpTelOk = () => ISADM() || !!(window.__MPJOG && window.__MPJOG());
+  const mpTelOk = () => ISADM() || (!!window.__SB && !!ROLE() && ROLE() !== 'vendeg'); // v110: minden belépett tag (cégvezető, rögzítő, olvasó) – a szereléshez; vendég nem
+  const mpJelOk = () => ISADM() || /^(cegvezeto|rogzito)$/.test(ROLE() || '');
   // jelzés az adminnak (nem admin szerelő): „ezt a tartót felszereltük” – a hibák között, az admin egy gombbal jóváhagyja
   const mpJelek = () => Object.values(HIBA || {}).filter(x => x && x.cat === 'Müpro tartó felszerelve' && x.st !== 'ok');
   const mpJelOf = r => mpJelek().find(x => x.mp === mpKey(r));
@@ -19160,7 +19161,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   function mpTelCard(r) { const R = mpTelRows(r.sys), k = R.findIndex(x => x.i === r.i), no = new Map(R.map((x, i) => [x.i, i + 1])), f = mpTrk()[mpKey(r)], jl = mpJelOf(r), T = MP.d.types[r.typ], prev = R[k - 1], next = R[k + 1], nk = [...new Set(mpGeom(r).nodes.map(n => n.k))];
     let act = '';
     if (ISADM()) act = f ? `<button class="b hbig" data-mpfent="${r.i}">✓ Felszerelve (${esc(huD(f.d))}) – jelölés törlése</button>` : `<button class="b pri hbig" data-mpfent="${r.i}">✓ Felszerelve</button>${jl ? `<div class="hint">📣 Jelezte: ${esc(jl.by || '')}, ${esc(huD(jl.d))}${jl.megj ? ' – ' + esc(jl.megj) : ''}</div>` : ''}`;
-    else if (!r.jav) act = f ? `<button class="b hbig" disabled>✓ Felszerelve (${esc(huD(f.d))})</button>` : jl ? `<button class="b hbig" disabled>📣 Jelezve az adminnak (${esc(huD(jl.d))})</button>` : `<button class="b pri hbig" data-mptjel="${r.i}">📣 Felszereltük – jelzés az adminnak</button>`;
+    else if (!r.jav) act = f ? `<button class="b hbig" disabled>✓ Felszerelve (${esc(huD(f.d))})</button>` : jl ? `<button class="b hbig" disabled>📣 Jelezve az adminnak (${esc(huD(jl.d))})</button>` : (mpJelOk() ? `<button class="b pri hbig" data-mptjel="${r.i}">📣 Felszereltük – jelzés az adminnak</button>` : '<span class="hint">Olvasási jog: jelezni a cégvezető / rögzítő tud.</span>');
     let h = `<div class="card telc"><div class="row" style="align-items:center;gap:8px"><button class="b sm" data-mptback="sys">‹ ${esc(r.sys)}</button><b style="font-size:22px" class="mono">T${no.get(r.i)}</b><span class="hint">${k + 1} / ${R.length}</span></div>
       <div class="mptname"><b>${esc(r.raw || r.typ)}</b><span>${esc(r.typ)} · ${MP.d.tower && MP.d.tower[r.typ] ? 'torony (függőleges ág)' : r.fan ? 'ventilátortartó' : r.kat === 'SS' ? 'másodlagos acél (SS)' : 'elsődleges (MHS)'}</span></div>
       <div class="tkp"><div><b>${esc(r.prof || '–')}</b><span>profil</span></div><div><b>${mpLen(r) ? mpN(mpLen(r)) : '–'}</b><span>hossz (mm)</span></div><div><b>${mpN(mpSupKg(r), 1)}</b><span>kg</span></div><div><b>${esc(MPLV[r.lv].split(' ')[0])}</b><span>szint</span></div></div>
