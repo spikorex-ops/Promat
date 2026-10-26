@@ -301,6 +301,7 @@ body.tel .mp2d{max-width:100%}body.tel .mpbt td:nth-child(3){min-width:0}body.te
 .utnew label,.utsplit label{display:flex;flex-direction:column;font-size:12px;gap:2px}
 .utpdf{border:2px solid #0D6E78;border-radius:8px;padding:8px 10px;background:#F2F9FA;display:flex;flex-direction:column;gap:6px}.utpsec{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}.utps{display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:6px;padding:5px 8px 5px 28px;position:relative;background:#fff;cursor:pointer}.utps input{position:absolute;left:8px;top:7px}.utps.on{border-color:#0D6E78;background:#E6F3F4}.utps small{color:#5E6B74;font-size:11px}
 .utfban{border:2px solid #C2410C;background:#FFF4EC;border-radius:8px;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.dskback{margin:0 10px 4px 0;font-weight:600;vertical-align:middle}
 </style><style>body{margin:0}[hidden]{display:none!important}</style></head><body>
 
 <div class="app">
@@ -312,7 +313,7 @@ body.tel .mp2d{max-width:100%}body.tel .mpbt td:nth-child(3){min-width:0}body.te
     <nav class="card nav" id="nav" aria-label="Menü"></nav>
     <main class="main">
       <div class="ctx card">
-        <div class="ctxl"><span class="crumb" id="pgCrumb"></span><h1 id="pgTitle"></h1><span class="hint" id="pgSub"></span></div>
+        <div class="ctxl"><button class="b sm dskback" id="dskBack" hidden>‹ Vissza</button><span class="crumb" id="pgCrumb"></span><h1 id="pgTitle"></h1><span class="hint" id="pgSub"></span></div>
         <div class="ctxr">
           <div class="picker" id="picker">
             <button class="b pick" id="sysbtn" aria-haspopup="true" aria-expanded="false"><span class="pl">Rendszer</span><b id="selName"></b><span class="car">▾</span></button>
@@ -13494,7 +13495,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v121 (2026-10-26)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v122 (2026-10-26)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14862,6 +14863,24 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function telGoBack() { if (window.__rxFullClose && window.__rxFullClose(false)) return; const s = TELH.pop(); TELHNO = true; if (!s) { if (KV !== 'tel' || S.tab !== 'kovet') { S.tab = 'kovet'; KV = 'tel'; renderPane(); window.scrollTo(0, 0); } else TELHNO = false; return; }
     KV = s.kv; TELS = s.s; TELN = s.n; TELT = s.t; TELFE = s.fe; HELY.pid = s.hp; HELY.q = s.hq; TELFIL = s.fil; TELBK = s.bk; S.tab = s.tab || 'kovet'; TELMORE = false; renderPane(); setTimeout(() => window.scrollTo(0, s.y || 0), 40); }
   window.addEventListener('popstate', () => { if (window.__rxFullClose && window.__rxFullClose(true)) return; if (TEL && !/[#&](d|m)=/.test(location.hash)) telGoBack(); });
+  /* v122: asztali vissza / előre – a program saját lépései a böngésző-előzményben (egér vissza gombja, Alt+←, „‹ Vissza” gomb) */
+  let DSKH = [], DSKI = -1, DSKNO = false;
+  const dskSnap = () => ({ tab: S.tab, kv: KV, sel: (S.sel || []).slice(), lap: Object.assign({}, S.lap || {}), rs: RAJZSYS, hl: IDHL, is: IDSEL, y: window.scrollY });
+  const dskKey = s => [s.tab, s.tab === 'kovet' ? s.kv : '', s.sel.join(','), s.tab === 'lap' ? (s.lap.sys || '') + '/' + (s.lap.key || '') : '', s.tab === 'kovet' && s.kv === 'idom' ? s.rs + '/' + s.hl : ''].join('|');
+  function dskBtn() { const b = document.getElementById('dskBack'); if (b) { b.hidden = TEL || DSKI <= 0; b.title = DSKI > 0 ? 'Vissza: ' + dskTitle(DSKH[DSKI - 1]) + ' (egér vissza gombja / Alt + ←)' : ''; } }
+  function dskTitle(s) { if (!s) return ''; if (s.tab !== 'kovet') return ({ elemek: 'Elemek', lap: 'Gyártási lap', konsz: 'Konszignáció', szabas: 'Szabásterv', osszes: 'Összes rendszer', felulet: 'Felület', beall: 'Beállítások' })[s.tab] || s.tab; const it = NAV.flatMap(g => g[1]).find(x => x[0] === 'k:' + s.kv); return it ? it[1] : s.kv; }
+  window.__dskTrack = () => { if (TEL) return; const sn = dskSnap(), k = dskKey(sn);
+    if (DSKI < 0) { DSKH = [sn]; DSKI = 0; try { history.replaceState(Object.assign({}, history.state || {}, { dsk: 0 }), ''); } catch (e) { } dskBtn(); return; }
+    if (DSKNO) { DSKNO = false; DSKH[DSKI] = Object.assign(sn, { y: DSKH[DSKI].y }); dskBtn(); return; }
+    if (k === dskKey(DSKH[DSKI])) { DSKH[DSKI] = Object.assign(sn, { y: DSKH[DSKI].y }); return; }
+    DSKH = DSKH.slice(0, DSKI + 1); DSKH.push(sn); if (DSKH.length > 80) DSKH.shift(); DSKI = DSKH.length - 1; try { history.pushState({ dsk: DSKI }, ''); } catch (e) { } dskBtn(); };
+  function dskGo(i) { const s = DSKH[i]; if (!s) return; DSKI = i; DSKNO = true; const selCh = s.sel.join(',') !== (S.sel || []).join(',');
+    S.tab = s.tab; KV = s.kv; S.lap = Object.assign({}, s.lap); RAJZSYS = s.rs; IDHL = s.hl; IDSEL = s.is; POP = null; if (typeof popClose === 'function') try { popClose(); } catch (e) { }
+    if (selCh) { setSel(s.sel); DSKNO = true; } try { fmSave(); } catch (e) { } renderPane(); setTimeout(() => window.scrollTo(0, s.y || 0), 40); }
+  window.addEventListener('scroll', () => { if (!TEL && DSKH[DSKI]) DSKH[DSKI].y = window.scrollY; }, { passive: true });
+  window.addEventListener('popstate', ev => { if (TEL || /[#&](d|m)=/.test(location.hash)) return; const f = document.getElementById('zvfull'); if (f && !f.hidden) { f.hidden = true; f.innerHTML = ''; }
+    const st = ev.state; if (st && st.dsk != null && DSKH[st.dsk]) dskGo(st.dsk); else if (DSKI > 0) dskGo(0); });
+  document.addEventListener('click', ev => { const b = ev.target.closest && ev.target.closest('#dskBack'); if (!b) return; ev.preventDefault(); try { history.back(); } catch (e) { } }, true);
   window.addEventListener('scroll', () => { if (TEL && TELHS) TELHS.y = window.scrollY; }, { passive: true });
   function telIrToggle() { TELIR = TELIR === 'gy' ? 'sz' : 'gy'; try { localStorage.setItem('promat-tirany', TELIR); } catch (e) { } telBand(); renderPane(); toast(TELIR === 'gy' ? '🏭 Gyártás irány' : '🔧 Szerelés irány'); }
   function kvTelMenu() { const nh = Object.values(HIBA || {}).filter(x => x && x.st !== 'ok').length, it = (k, ic, l, s) => navOk(k) ? `<button class="tmi" data-teltab="${k}"><span class="tmic">${ic}</span><span class="tmt"><b>${l}</b>${s ? `<small>${s}</small>` : ''}</span><span class="tar">›</span></button>` : '';
@@ -19888,7 +19907,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       else p.innerHTML = html;
       p.dataset.pg = pg; }
     catch (e) { console.error('[Promat] oldalhiba', e); p.innerHTML = `<div class="card" style="padding:16px;border-left:6px solid var(--bad)"><h2 style="margin:0 0 6px">Ezt az oldalt nem sikerült megjeleníteni</h2><p>Az adatok nem sérültek, a mentés működik. Válassz másik menüpontot, vagy töltsd újra az oldalt (F5).</p><p class="hint mono" style="font-size:12px">${esc(String(e && e.message || e))}</p></div>`; }
-    window.scrollTo(0, y);
+    window.scrollTo(0, y); try { if (window.__dskTrack) window.__dskTrack(); } catch (e) { }
     try { renderCtx(); } catch (e) { console.error('[Promat] fejléc', e); }
     try { if (window.__afterPane) window.__afterPane(); } catch (e) { console.error('[Promat] 3D/rajz', e); }
   }
