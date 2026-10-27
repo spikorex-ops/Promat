@@ -13503,7 +13503,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v139 (2026-10-27)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v140 (2026-10-27)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14220,7 +14220,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   let TERP = {}, TLAY = new Map(), TNAMES = new Map(), TMERGE = null, TEREP_ON = false, LAYER = { mode: 'hiv', uid: '' };
   try { const l = JSON.parse(localStorage.getItem('promat-layer') || 'null'); if (l && l.mode) LAYER = l; } catch (e) { }
   const layerSave = () => { try { localStorage.setItem('promat-layer', JSON.stringify(LAYER)); } catch (e) { } };
-  const trkOf = pid => { const k = tid(pid); if (LAYER.mode === 'terep' && LAYER.uid && TLAY.has(LAYER.uid) && window.__ROLE === 'admin') return TLAY.get(LAYER.uid)[k] || {}; if (TMERGE) return TMERGE[k] || {}; return TRK[k] || {}; };
+  // v140: ami fel van szerelve (vagy kiszállítva / átvéve), az legyártott is – ha a gyártás nincs külön rögzítve, „legyártva” (gyártó és dátum nélkül) jelölést kap olvasáskor; az adat nem változik
+  const TRKFX = new WeakMap(), trkFix = t => { if (!t || t.kesz || !(t.szerelve || t.atveve || t.helyszin)) return t; let f = TRKFX.get(t); if (!f) { f = Object.assign({}, t, { kesz: { ceg: '', nd: 1, auto: 1 } }); TRKFX.set(t, f); } return f; };
+  const trkOf = pid => { const k = tid(pid); if (LAYER.mode === 'terep' && LAYER.uid && TLAY.has(LAYER.uid) && window.__ROLE === 'admin') return trkFix(TLAY.get(LAYER.uid)[k] || {}); if (TMERGE) return trkFix(TMERGE[k] || {}); return trkFix(TRK[k] || {}); };
   function terepRebuild() { TLAY = new Map(); TNAMES = new Map(); for (const d of Object.values(TERP)) { if (!d || !d.uid) continue; let m = TLAY.get(d.uid); if (!m) TLAY.set(d.uid, m = {}); for (const [k, v] of Object.entries(d.p || {})) { if (!v) continue; m[k] = Object.assign({}, m[k] || {}, v); } const o = TNAMES.get(d.uid) || { nev: d.nev || '', ceg: d.ceg || '' }; if (d.nev) o.nev = d.nev; if (d.ceg) o.ceg = d.ceg; TNAMES.set(d.uid, o); }
     if (TEREP_ON && window.__ROLE && window.__ROLE !== 'admin' && TUID) { const own = TLAY.get(TUID) || {}; TMERGE = Object.assign({}, TRK); for (const [k, v] of Object.entries(own)) { const o = Object.assign({}, TMERGE[k] || {}); for (const ph of ['kesz', 'helyszin', 'szerelve']) if (v[ph]) o[ph] = Object.assign({}, v[ph], { _t: 1 }); o.pid = v.pid || o.pid; TMERGE[k] = o; } } else TMERGE = null; }
   const dOf = x => !x || x.nd ? '' : (x.d || (x.at || '').slice(0, 10));
@@ -15873,7 +15875,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (d.fdclr) { FIND.src = ''; renderPane(); return; }
     if (d.fdall) { const R = findRows() || []; FINDSET = new Set(R.map(x => x.r.sys + '|' + x.r.n)); AVW = 'talalat'; KV = 'atnez'; fmSave(); renderPane(); }
     else if (d.fdloc) { const [sy, n] = d.fdloc.split('|'); POP = null; KV = 'idom'; RAJZSYS = sy; IDHL = +n; I3FOC = +n; IDLOC = +n; IDSEL = '__'; setSel([sy]); fmSave(); }
-    else if (d.fdgy) { const r = allUnits().by.get(d.fdgy); if (!r) return; const base = { at: new Date().toISOString(), by: TNAME || '', uid: TUID || '' }, patch = { kesz: Object.assign({ d: today(), ceg: FIND.ceg || 'spiko', kinek: '' }, trkOf(r.pid).kesz || {}, base) }; if ((FIND.hely || '').trim()) patch.tarol = Object.assign({ hely: FIND.hely.trim(), d: today() }, base);
+    else if (d.fdgy) { const r = allUnits().by.get(d.fdgy); if (!r) return; const base = { at: new Date().toISOString(), by: TNAME || '', uid: TUID || '' }, patch = { kesz: Object.assign({ d: today(), ceg: FIND.ceg || 'spiko', kinek: '' }, (trkOf(r.pid).kesz || {}).auto ? {} : trkOf(r.pid).kesz || {}, base) }; if ((FIND.hely || '').trim()) patch.tarol = Object.assign({ hely: FIND.hely.trim(), d: today() }, base);
       const fe = FIND.src && foldL()[FIND.src]; if (fe && !patch.tarol && fe.hely) patch.tarol = Object.assign({ hely: fe.hely, d: today() }, base);
       await szWrite([{ pid: r.pid, sys: r.sys, patch }], r.sys + ' / ' + r.n + (r.np > 1 ? ' #' + r.part : '') + ': beazonosítva, legyártva' + (fe ? ' (felmért ' + FIND.src + ')' : '') + (patch.tarol ? ' · ' + patch.tarol.hely : ''), { br: [r.sys, r.n], lab: 'beazonosítva (Hová való?)' });
       if (fe) { const L = Object.assign({}, foldL()), x = Object.assign({}, L[FIND.src]); x.pids = (x.pids || []).concat(r.pid); L[FIND.src] = x; await foldSave(L); if (x.pids.length >= (+x.db || 1)) { toast(FIND.src + ': minden darab helye megvan (' + x.pids.join(', ') + ')'); FIND.src = ''; } else toast(FIND.src + ': ' + x.pids.length + ' / ' + (x.db || 1) + ' darab hozzárendelve'); } else toast(r.pid + ': ide tartozik – legyártottként rögzítve'); renderPane(); }
@@ -17102,7 +17104,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (!pids && us.length > 1 && BR.piece) { popOpen(sys, +n, LASTXY[0], LASTXY[1], true); return; }
     const nAll = us.length; if (pids) us = us.filter(r => pids.includes(r.pid)); if (!us.length) return;
     const base = { at: new Date().toISOString(), by: TNAME || '', uid: TUID || '' }, d = BR.d || today(), ent = [], P = (r, patch) => ent.push({ pid: r.pid, sys: r.sys, patch }); let lab = '', lock = 0;
-    if (BR.mode === 'gy') { for (const r of us) { if (trkOf(r.pid).eg) { lock++; continue; } P(r, { kesz: Object.assign({}, trkOf(r.pid).kesz || {}, { d, nd: 0, ceg: BR.ceg, kinek: BR.kinek || '' }, base) }); } lab = 'legyártotta: ' + cegNev(BR.ceg); }
+    if (BR.mode === 'gy') { for (const r of us) { if (trkOf(r.pid).eg) { lock++; continue; } P(r, { kesz: Object.assign({}, (trkOf(r.pid).kesz || {}).auto ? {} : trkOf(r.pid).kesz || {}, { d, nd: 0, ceg: BR.ceg, kinek: BR.kinek || '' }, base) }); } lab = 'legyártotta: ' + cegNev(BR.ceg); }
     else if (BR.mode === 'sz') { const ho = d.slice(0, 7); for (const r of us) { if (trkOf(r.pid).ea) { lock++; continue; } P(r, { szerelve: Object.assign({}, trkOf(r.pid).szerelve || {}, { d, nd: 0, ceg: BR.ceg, brig: BR.brig || '', utolag: IGAZ[ho] && IGAZ[ho].zarva ? 1 : 0 }, base) }); } lab = 'felszerelte: ' + cegNev(BR.ceg) + (BR.brig ? ' · ' + BR.brig : ''); }
     else if (BR.mode === 'atv') { for (const r of us) P(r, { atveve: Object.assign({ d, mod: 'MEO (saját minőségellenőrzés)' }, base) }); lab = 'átvéve'; }
     else if (BR.mode === 'xsz') { for (const r of us) { const t = trkOf(r.pid); if (t.ea) { lock++; continue; } if (t.szerelve || t.atveve) P(r, { szerelve: null, atveve: null }); } lab = 'szerelés törölve'; }
