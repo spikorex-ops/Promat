@@ -13511,7 +13511,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v147 (2026.10.28.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v148 (2026.10.29.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -18913,7 +18913,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   const ltmD = () => (BEALL && BEALL.ltm) || {};
   // v126: IFC 3D-adat (portok, ívelt elemek hálója, IFC-azonosítók) – az önálló fájlban beépítve, az internetes változatban a privát tárolóból (adat/ifc3d.json), csak itt töltődik be
   var LTI = { st: '', err: '' };
-  function ltmIfcSet(o) { if (!o || !o.port || !o.eid) throw new Error('Ez nem az ifc3d.json fájl.'); D.port = o.port; D.tmesh = o.tmesh || {}; D.eid = o.eid; D.isz = o.isz || {}; D.geid = o.geid || {}; if (!o.geid) toast('Figyelem: régi ifc3d.json – a horganyzott elemek IFC-adata nélkül. Töltsd fel az újat.'); LTMC.clear(); LTTM.clear(); if (LTM3) { try { LTM3.R.dispose(); } catch (e) { } } LTM3 = null; }
+  function ltmIfcSet(o) { if (!o || !o.port || !o.eid) throw new Error('Ez nem az ifc3d.json fájl.'); D.port = o.port; D.tmesh = o.tmesh || {}; D.eid = o.eid; D.isz = o.isz || {}; D.geid = o.geid || {}; if (o.gx) { D.ghost = D.ghost || {}; for (const [sy, x] of Object.entries(o.gx)) { const a0 = D.ghost[sy] || (D.ghost[sy] = []); if (a0.length === x.base) a0.push(...x.g); } try { if (typeof P2D !== 'undefined') P2D = null; } catch (e) { } } if (!o.geid) toast('Figyelem: régi ifc3d.json – a horganyzott elemek IFC-adata nélkül. Töltsd fel az újat.'); LTMC.clear(); LTTM.clear(); if (LTM3) { try { LTM3.R.dispose(); } catch (e) { } } LTM3 = null; }
   async function ltmIfc() { if (D.port) { LTI.st = 'ok'; return; } if (LTI.st === 'tolt') return; const sb = window.__SB; if (!sb) { LTI.st = 'nincs'; return; } LTI.st = 'tolt'; LTI.err = '';
     try { let txt = null; try { const u = await sb.storage.from('promat').createSignedUrl('adat/ifc3d.json', 120); if (u && u.data && u.data.signedUrl) { const q = await fetch(u.data.signedUrl + '&t=' + Date.now(), { cache: 'no-store' }); if (q.ok) txt = await q.text(); } } catch (e) { }
       if (txt == null) { const r = await sb.storage.from('promat').download('adat/ifc3d.json'); if (r.error) throw new Error(/not.?found|Object not found/i.test(r.error.message || '') ? 'nincs még feltöltve' : r.error.message); txt = await r.data.text(); } ltmIfcSet(JSON.parse(txt)); LTI.st = 'ok'; }
