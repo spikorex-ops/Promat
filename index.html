@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v173 (2026.10.30.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v174 (2026.10.30.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19437,8 +19437,9 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     const G = Array.isArray(J) ? J : (J.gepek || []), C = J.csapatok || (J.cfg || {}).csapatok; let n = 0;
     if (Array.isArray(C) && C.length) { const cur = gepCfg().csapatok.slice(); for (const c of C) { const i = cur.findIndex(z => z.id === c.id); if (i >= 0) cur[i] = Object.assign({}, cur[i], c); else cur.push(c); } await gepCfgPut({ csapatok: cur }); }
     if (J.cfg && typeof J.cfg === 'object') { const c = Object.assign({}, J.cfg); delete c.csapatok; await gepCfgPut(c); }
+    let nd = 0; for (const id of (Array.isArray(J.torol) ? J.torol : [])) if (GEP[id] && id !== '_cfg') { delete GEP[id]; await docDel('gep', String(id)); nd++; } // v174: gépek törlése betöltőfájlból
     for (const g of G) { if (!g || g.azon == null) continue; const id = String(g.id || ('g_' + String(g.azon).replace(/[^A-Za-z0-9]+/g, ''))); const o = Object.assign({}, GEP[id] || {}, g); delete o._napl; await gepPut(id, o, GEP[id] ? (g._napl || null) : (g._napl || 'Felvéve (betöltés fájlból)')); n++; }
-    toast(n + ' gép betöltve' + (Array.isArray(C) ? ', ' + C.length + ' csapat' : '')); renderPane(); }
+    toast(n + ' gép betöltve' + (Array.isArray(C) ? ', ' + C.length + ' csapat' : '') + (nd ? ', ' + nd + ' törölve' : '')); renderPane(); }
   const gepRP = () => { try { localStorage.setItem('promat-gepv', GEPV); localStorage.setItem('promat-gepf', JSON.stringify(GEPF)); } catch (e) { } renderPane(); };
   document.addEventListener('toggle', ev => { const d = ev.target && ev.target.dataset; if (d && d.gdet) { if (ev.target.open) GEPOPEN.add(d.gdet); else GEPOPEN.delete(d.gdet); } }, true);
   document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-gview],[data-gflt],[data-ggo],[data-geped],[data-gepadd],[data-gepcancel],[data-gepsave],[data-gepdel],[data-gnap],[data-gcsed],[data-gcsadd],[data-gcsdel],[data-gcsx],[data-gimp],[data-gexp],[data-gxl],[data-gclr],[data-gtall]'); if (!b) return; const d = b.dataset;
