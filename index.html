@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v168 (2026.10.30.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v169 (2026.10.30.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19247,7 +19247,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       <div class="jogw"><div class="card jogl"><input data-jogq value="${esc(JOGQ)}" placeholder="Keresés név / cég" autocomplete="off"><div class="jogll">${P.filter(p => !JOGQ || (p.nev + ' ' + cn(p.ceg_id)).toLowerCase().includes(JOGQ.toLowerCase())).map(p => { const J = p.jog || {}, m = jogRsz(p); return `<button class="jogu${JOGU === p.user_id ? ' on' : ''}" data-jogu="${esc(p.user_id)}"><b>${esc(p.nev)}</b><span class="hint">${esc(cn(p.ceg_id))} · ${esc(SZN[p.szerep] || p.szerep)}${p.aktiv === false ? ' · inaktív' : ''}</span><span class="jogm ${m}">${m === 'mind' ? 'minden rendszer' : m === 'valaszt' ? 'kiválasztott rendszerek' : 'csak kiosztott'}${Object.keys(J).length ? ' · egyedi' : ' · alap'}</span></button>`; }).join('') || '<p class="hint">Nincs felhasználó.</p>'}</div></div>
       <div class="jogr">${JOGU ? jogEditor(P.find(p => p.user_id === JOGU)) : '<div class="card" style="padding:20px"><p class="hint">← Válassz egy embert a listából.</p></div>'}</div></div></div>`;
     return h; }
-  function jogEditor(p) { if (!p) return ''; if (!JOGD || JOGD.u !== p.user_id) JOGD = { u: p.user_id, J: JSON.parse(JSON.stringify(p.jog || {})), q: '', dirty: false }; const J = JOGD.J, cn = id => ((FH.cegek || []).find(c => c.id === id) || {}).nev || id || '—', eff = jogEff(p, J), m = J.rsz || '', mEff = m || (jogSajat(p.ceg_id) ? 'mind' : 'kiosztott'), O = J.oldal || {}, F = J.fn || {}, M = J.mas || {};
+  function jogEditor(p) { if (!p) return ''; if (!JOGD || JOGD.u !== p.user_id) { const J0 = JSON.parse(JSON.stringify(p.jog || {})); for (const k of p.tilt || []) { J0.oldal = J0.oldal || {}; if (!(k in J0.oldal)) J0.oldal[k] = false; } JOGD = { u: p.user_id, J: J0, q: '', dirty: false }; } const J = JOGD.J, cn = id => ((FH.cegek || []).find(c => c.id === id) || {}).nev || id || '—', eff = jogEff(p, J), m = J.rsz || '', mEff = m || (jogSajat(p.ceg_id) ? 'mind' : 'kiosztott'), O = J.oldal || {}, F = J.fn || {}, M = J.mas || {};
     const tri = (k, base) => { const v = O[k] === true ? 'be' : O[k] === false ? 'ki' : ''; return `<select data-jogo="${esc(k)}" class="jogtri ${v || (base ? 'abe' : 'aki')}">${opt('', 'alap (' + (base ? 'látja' : 'nem látja') + ')', v)}${opt('be', '✓ látja', v)}${opt('ki', '✕ nem látja', v)}</select>`; };
     const c = (FH.cegek || []).find(x => x.id === p.ceg_id) || {}, base = k => navBase(k, p.szerep, c) && !(p.tilt || []).includes(k) && !(k in O);
     const q = (JOGD.q || '').toUpperCase().replace(/\s+/g, ''), RL = new Set(J.rlist || []), SL = NAMES.filter(s => !q || s.toUpperCase().replace(/\s+/g, '').includes(q) || RL.has(s));
