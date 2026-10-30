@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v172 (2026.10.30.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v173 (2026.10.30.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19311,7 +19311,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     if (x.papir && String(x.papir).replace(/\s/g, '').toUpperCase() !== String(x.azon).replace(/\s/g, '').toUpperCase()) T.push(['warn', `Papír-eltérés: a papíron ${x.papir}, a gépen ${x.azon} – egyeztetni a bérbeadóval`]);
     if (x.bejaras === 'nincs') T.push(['bad', 'A helyszínen nem találtuk' + ((x.megr || {}).lista ? ' – a megrendelő listáján hozzánk van rendelve' : '') + ' – megkeresni / tisztázni']);
     { const c = gepCfg(), m = x.megr || {}, h = x.hely || {}; if (c.megrDatum) { if (!m.lista) T.push(['warn', 'Nincs a megrendelő (' + (c.megrNev || 'kínai') + ') listáján – tisztázni, kihez tartozik, ki fizeti']);
-      else if (m.szint && x.bejaras !== 'nincs') { if (h.ter === 'kint') T.push(['warn', `A megrendelő szerint ${m.szint}, valójában épületen kívül`]); else if (h.szint && gepSz(h.szint) !== gepSz(m.szint)) T.push(['warn', `Szint-eltérés: a megrendelő szerint ${m.szint}, a bejáráskor ${h.szint}`]); } } }
+      else if (m.szint && x.bejaras !== 'nincs') { const vs = h.szint || (h.ter === 'kint' ? 'Földszint' : ''); /* v173: épületen kívül = földszint */ if (vs && gepSz(vs) !== gepSz(m.szint)) T.push(['warn', `Szint-eltérés: a megrendelő szerint ${m.szint}, a bejáráskor ${vs}`]); } } }
     const hi = []; if (!x.tipus) hi.push('típus'); if (!(x.csapat || []).length) hi.push('csapat'); if (!gepHely(x)) hi.push('helyszín'); if (!k.mod) hi.push('kezelő'); if (!x.berbeado) hi.push('bérbeadó');
     if (hi.length && x.bejaras !== 'nincs') T.push(['mute', 'Hiányzó adat: ' + hi.join(', ')]);
     for (const l of String(x.todo || '').split('\n').map(s => s.trim()).filter(Boolean)) T.push(['man', l]);
