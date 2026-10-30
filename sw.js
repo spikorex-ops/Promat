@@ -41,3 +41,6 @@ self.addEventListener('message', e => {
     if (o !== t) { await c.put('index.html', r); if (o != null) await notify(); }
   }));
 });
+
+// v165: értesítésre kattintva a program előjön (vagy megnyílik) a feladattal
+self.addEventListener('notificationclick', e => { e.notification.close(); const id = e.notification.data || ''; e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => { for (const c of cs) { c.postMessage('feladat:' + id); return c.focus(); } return self.clients.openWindow('./'); })); });
