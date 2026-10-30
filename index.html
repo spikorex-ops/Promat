@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v176 (2026.10.30.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v177 (2026.10.30.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19332,14 +19332,27 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   const gSt = x => x.bejaras === 'nincs' ? 'gone' : gAll(x)[1];
   const MH = 'https://mateco-hungary.hu/';
   // v176: típuskép = a géptípushoz egyszer feltöltött fotó (minden azonos típusú gépnél megjelenik); a bérbeadó termékoldala linkként
-  const GEPKAT = { GS3369DC: MH + 'en/machines/scissor-lifts/en-gs-3369-dc', GS3246DC: MH + 'en/machines/scissor-lifts/en-gs-3246-dc', GS2646DC: MH + 'en/machines/scissor-lifts/en-gs-2646-dc-e-drive',
-    Z3422N: MH + 'en/machines/articulated-telescopic-boom-lifts/en-z-34-22-n', Z8060: MH + 'en/machines/articulated-telescopic-boom-lifts/en-z-80-60-j-rt-4-wd', HL220D25: MH + 'en/machines/scissor-lifts/en-hl-220-d25', RX6030: MH + 'en/machines/forklift-trucks/en-still-rx-60-30' };
+  // v177: típusképek – a böngészőben ellenőrizve (2026.10.30.); elöl a Mateco saját gépének fotója, ha van; kattintásra lapozható
+  const PMC = 'https://asset.productmarketingcloud.com/api/assetstorage/1246_', MSK = 'https://cdn.machineseeker.com/data/listing/img/vga/ms/', MHU = MH + 'wp-content/uploads/';
+  const GEPKAT = {
+    GS3369DC: { url: MH + 'en/machines/scissor-lifts/en-gs-3369-dc', imgs: [['https://access-lift.com/wp-content/uploads/2024/09/GNL0243_1-600x600.jpg', 'access-lift.com'], ['https://www.genielift.com/images/default-source/product-images/rough-terrain-scissor-lifts/gs-4069-dc/gs-4069dc_alt1.jpg?sfvrsn=764eff48_21', 'genielift.com (GS-4069 DC, azonos család)'], [MSK + '51/15/18186146-01.jpg?v=1769830327', 'machineseeker.com']] },
+    GS3246DC: { url: MH + 'en/machines/scissor-lifts/en-gs-3246-dc', imgs: [[PMC + 'ca536cca-f804-4211-aa91-c6a6e84f4372', 'ramirent'], ['https://www.genielift.com/images/default-source/kunpeng-4046/gs-3246_warehouse_elevated_3-people_1_low-%282%2980538f3bebe54caf9c45251dcf01dcc3.jpg?sfvrsn=538ab952_1', 'genielift.com']] },
+    GS2646DC: { url: MH + 'en/machines/scissor-lifts/en-gs-2646-dc-e-drive', imgs: [[MHU + '2023/10/csm_Genie_GS_2646_DC_E-drive__1__1bea1d8e4d.png', 'mateco-hungary.hu'], ['https://www.loutec.com/content/uploads/2025/11/Genie-GS2646-1_EN.jpg', 'loutec.com']] },
+    Z3422N: { url: MH + 'en/machines/articulated-telescopic-boom-lifts/en-z-34-22-n', imgs: [[MHU + '2023/10/csm_Z-3422N__1__790a723151.jpg', 'mateco-hungary.hu'], [PMC + 'd6621dba-9ce7-4204-b830-e48ded8cf752', 'ramirent']] },
+    Z8060: { url: MH + 'en/machines/articulated-telescopic-boom-lifts/en-z-80-60-j-rt-4-wd', imgs: [[MHU + '2023/10/csm_Z-80__1__a48ed1b957.png', 'mateco-hungary.hu'], [PMC + '3ed518ef-4d5f-4c33-a1d3-16152eba4acc', 'ramirent']] },
+    HL220D25: { url: MH + 'en/machines/scissor-lifts/en-hl-220-d25', imgs: [['https://eqsk4m2dkju.exactdn.com/app/uploads/sites/2/2024/02/HOL-HL-220D25.jpg?strip=all&quality=92&webp=92&avif=80&sharp=1', 'riwal.com'], [MHU + '2024/08/20240723_140604-scaled.jpg', 'mateco-hungary.hu (a Mateco gépe)']] },
+    RX6030: { url: MH + 'en/machines/forklift-trucks/en-still-rx-60-30', imgs: [[MHU + '2024/09/20240716_134737.webp', 'mateco-hungary.hu'], [MSK + '60/86/22639307-01.jpg?v=1787960357', 'machineseeker.com']] } };
+  window.gepImgNext = (im, err) => { const L = JSON.parse(im.dataset.alts || '[]'); let i = +(im.dataset.i || 0); if (err) { im.dataset.bad = (im.dataset.bad || '') + i + ','; } const bad = (im.dataset.bad || '').split(',');
+    for (let k = 1; k <= L.length; k++) { const n = (i + k) % L.length; if (!bad.includes(String(n)) && (n !== i || !err)) { im.dataset.i = n; im.src = L[n][0]; const c = im.closest('figure').querySelector('.gimgs'); if (c) c.textContent = (L.length > 1 ? (n + 1) + '/' + L.length + ' · ' : '') + 'kép: ' + L[n][1]; return; } }
+    if (err) im.closest('figure').classList.add('gimgx'); };
   const gepMk = x => String(x.modell || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const gepImg = x => { const L = fotoRef('gep:' + x.id), mk = gepMk(x), TL = mk ? fotoRef('gepkat:' + mk) : [], tf = TL[TL.length - 1], f = L[0], url = GEPKAT[mk] || '', adm = ISADM();
+  const gepImg = x => { const L = fotoRef('gep:' + x.id), mk = gepMk(x), TL = mk ? fotoRef('gepkat:' + mk) : [], tf = TL[TL.length - 1], f = L[0], url = (GEPKAT[mk] || {}).url || '', adm = ISADM();
     const link = url ? `<a class="gimgl" href="${esc(url)}" target="_blank" rel="noopener">Mateco termékoldal ↗</a>` : '';
     const up = adm && mk ? `<button class="gimgu" data-fadd="egyeb" data-fk="" data-fref="gepkat:${esc(mk)}" title="Fotó a ${esc(x.modell)} típushoz – minden ilyen típusú gépnél megjelenik">📷 ${tf ? 'Típuskép csere' : 'Típuskép feltöltése'}</button>` : '';
     const own = L.length ? `<button class="gimgf" data-fbig="${esc(f.id)}" data-fl="${esc(L.map(z => z.id).join(','))}">📷 ${L.length} saját fotó</button>` : '';
     if (x.kep) return `<figure class="gimg"><img src="${esc(x.kep)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.closest('figure').classList.add('gimgx')"><span class="gimgi">${GEPICO[x.tipus || '']}</span>${own}<figcaption>${link}${up}</figcaption></figure>`;
+    const K = GEPKAT[mk];
+    if (!tf && K && K.imgs.length) return `<figure class="gimg"><img src="${esc(K.imgs[0][0])}" data-alts="${esc(JSON.stringify(K.imgs))}" data-i="0" alt="${esc(x.modell || '')}" loading="lazy" referrerpolicy="no-referrer" onerror="gepImgNext(this,1)" onclick="gepImgNext(this)" title="${K.imgs.length > 1 ? 'Kattints a következő képért' : ''}" style="cursor:${K.imgs.length > 1 ? 'pointer' : 'default'}"><span class="gimgi">${GEPICO[x.tipus || '']}</span>${own}<figcaption><span class="gimgs">${K.imgs.length > 1 ? '1/' + K.imgs.length + ' · ' : ''}kép: ${esc(K.imgs[0][1])}</span>${link}${up}</figcaption></figure>`;
     if (tf) return `<figure class="gimg"><button class="gimgb" data-fbig="${esc(tf.id)}" data-fl="${esc(TL.map(z => z.id).join(','))}"><img data-fimg="${esc(tf.id)}" alt=""></button>${own}<figcaption>${link}${up}</figcaption></figure>`;
     if (f) return `<figure class="gimg gimgown"><button data-fbig="${esc(f.id)}" data-fl="${esc(L.map(z => z.id).join(','))}"><img data-fimg="${esc(f.id)}" alt=""></button><figcaption>saját fotó${L.length > 1 ? ' · ' + L.length + ' db' : ''} ${link}${up}</figcaption></figure>`;
     return `<figure class="gimg gimgx"><span class="gimgi">${GEPICO[x.tipus || '']}</span><figcaption>${x.modell ? 'nincs még típuskép' : 'típus pontosítandó'} ${link}${up}</figcaption></figure>`; };
@@ -19566,7 +19579,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
 .gimg img{max-width:100%;max-height:100%;object-fit:contain;display:block}.gimg .gimgi{display:none;color:#9AA7B3}.gimg .gimgi svg{width:72px;height:72px}
 .gimg.gimgx{background:#F5F7F9}.gimg.gimgx img{display:none}.gimg.gimgx .gimgi{display:block}
 .gimg figcaption{position:absolute;right:6px;bottom:4px;font-size:10.5px;color:#7C8B98;background:#ffffffd9;padding:1px 6px;border-radius:5px}.gimg figcaption a{color:inherit;text-decoration:none}.gimg figcaption a:hover{text-decoration:underline}
-.gimgl,.gimgu{color:inherit;text-decoration:none;border:0;background:none;font:inherit;font-size:10.5px;cursor:pointer;padding:0 0 0 6px}.gimgl:hover,.gimgu:hover{text-decoration:underline}.gimgu{color:var(--ginfo)}
+.gimgs{padding-right:4px}.gimgl,.gimgu{color:inherit;text-decoration:none;border:0;background:none;font:inherit;font-size:10.5px;cursor:pointer;padding:0 0 0 6px}.gimgl:hover,.gimgu:hover{text-decoration:underline}.gimgu{color:var(--ginfo)}
 .gimgb{border:0;padding:0;background:none;width:100%;height:100%;cursor:pointer;display:flex;align-items:center;justify-content:center}.gimgb img{max-width:100%;max-height:100%;object-fit:contain}
 .gcard.gs-kiv{border-top-color:#8A96A3;background:#F7F8FA;opacity:.92}.gkivb{padding:10px 14px!important;background:#EDEFF2;font-size:13px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}.gkivb small{flex-basis:100%;color:var(--mute)}
 .gfoot{flex-wrap:wrap}.gfoot .gselcs{max-width:200px;color:var(--ginfo)}.gfbtn{display:flex;gap:6px;margin-left:auto}
