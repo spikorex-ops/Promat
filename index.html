@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v183 (2026.10.31.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v184 (2026.10.31.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19460,6 +19460,18 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   function gepSort(L) { const so = GEPF.so || 'surg', key = x => { const T = gTodos(x); return T.length ? GEPSEV[T[0][0]] : 9; };
     if (so === 'azon') return L; if (so === 'csapat') return L.slice().sort((a, b) => String(gepCsN((a.csapat || [])[0]) || 'zzz').localeCompare(String(gepCsN((b.csapat || [])[0]) || 'zzz'), 'hu'));
     return L.slice().sort((a, b) => key(a) - key(b) || gTodos(b).length - gTodos(a).length); }
+  // ===== v184: típusonkénti összesítő (kosaras / ollós / targonca …) =====
+  const GTORD = ['gemes', 'ollos', 'targonca', 'egyeb', ''], GTRV = { gemes: 'Kosaras (gémes) emelő', ollos: 'Ollós emelő', targonca: 'Targonca', egyeb: 'Egyéb gép', '': 'Típus pontosítandó' };
+  function gepTipStat(A) { return GTORD.map(k => { const L = A.filter(x => (x.tipus || '') === k); if (!L.length) return null; const gone = L.filter(x => x.bejaras === 'nincs'), ott = L.filter(x => x.bejaras !== 'nincs');
+    const c = s => ott.filter(x => (x.allapot || 'ism') === s).length, mod = new Map(); for (const x of L) { const m = x.modell || 'típusazonosító nincs'; mod.set(m, (mod.get(m) || 0) + 1); }
+    const sz = v => ott.filter(x => gepSz((x.hely || {}).szint || '') === v || (v === 'fsz' && (x.hely || {}).ter === 'kint')).length;
+    return { k, L, n: L.length, ok: c('ok'), hj: c('hibas') + c('javit'), ism: c('ism'), gone: gone.length, hasz: ott.filter(x => x.allapot !== 'hibas' && x.allapot !== 'javit').length, em: sz('em'), fsz: sz('fsz'), ki: L.filter(x => (x.csapat || []).length).length, mod: [...mod.entries()].sort((a, b) => b[1] - a[1]) }; }).filter(Boolean); }
+  function gepTipPanel(A) { const S = gepTipStat(A); if (!S.length) return '';
+    return `<div class="gtip"><div class="gtiph"><b>Típusonként</b><span>kattints egy típusra a szűréshez</span></div><div class="gtipg">${S.map(t => `<div class="gtc gtc-${t.k || 'x'}${GEPF.tip === (t.k || '_') ? ' on' : ''}"><button class="gtcb" data-gflt="tip" data-v="${esc(t.k || '_')}"><span class="gtci">${GEPICO[t.k] || GEPICO.egyeb}</span><span class="gtcn"><b>${t.n}</b><small>${esc(GTRV[t.k])}</small></span></button>
+      <div class="gtcs"><span class="ok">működik <b>${t.ok}</b></span>${t.hj ? `<span class="bad">hibás / javítás <b>${t.hj}</b></span>` : ''}${t.ism ? `<span class="mute">nincs visszajelzés <b>${t.ism}</b></span>` : ''}${t.gone ? `<span class="gone">nem találtuk <b>${t.gone}</b></span>` : ''}</div>
+      <div class="gtcm"><span>Használható: <b>${t.hasz}</b></span><span>Emelet ${t.em} · földszint ${t.fsz}</span><span>Kiosztva ${t.ki} / ${t.n}</span></div>
+      <div class="gtcmod">${t.mod.map(([m, n]) => `<span>${esc(m)}${n > 1 ? ' ×' + n : ''}</span>`).join('')}</div>
+      <div class="gtcl">${t.L.map(x => `<button class="gtg gs-${gSt(x)}" data-ggo="${esc(x.id)}" title="${esc((x.modell || '') + ' · ' + gAll(x)[0])}">${esc(x.azon)}</button>`).join('')}</div></div>`).join('')}</div></div>`; }
   function kvGep() { const adm = ISADM(), AA = gepL(), A = AA.filter(x => !x.kivon), AK = AA.filter(x => x.kivon), L0 = gepSort(gepFilt(GEPF.all === 'kivon' ? AK : A)), L = adm ? L0 : L0.slice().sort((a, b) => (gepEnyem(b) - gepEnyem(a))), TT = A.map(x => [x, gepTodo(x)]);
     const cnt = k => A.filter(x => (x.allapot || 'ism') === k && x.bejaras !== 'nincs').length, gone = A.filter(x => x.bejaras === 'nincs').length;
     const R = []; for (const [x, t] of TT) for (const z of t) if (z[0] !== 'mute') R.push([x, z]); R.sort((a, b) => GEPSEV[a[1][0]] - GEPSEV[b[1][0]]);
@@ -19470,6 +19482,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       <div class="gacts">${adm ? `<button class="b sm pri" data-gepadd="1">+ Új gép</button>` : ''}<button class="b sm" data-gxl="1">⤓ Excel</button>${adm ? `<details class="gmenu"><summary class="b sm" title="További műveletek">⋯</summary><div><button data-gcsed="1">👥 Csapatok szerkesztése</button><button data-gqrp="1">🏷 QR-matricák nyomtatása</button><button data-gimp="1">⤒ Betöltés fájlból (JSON)</button><button data-gexp="1">⤓ Mentés fájlba (JSON)</button></div></details>` : ''}</div></div>
       ${A.length ? `<div class="gbar" title="Állapot szerinti megoszlás">${[['ok', cnt('ok')], ['javit', cnt('javit')], ['hibas', cnt('hibas')], ['ism', cnt('ism')]].filter(r => r[1]).map(([s, n]) => `<i class="g${GALL[s][1]}" style="flex:${n}">${n}</i>`).join('')}${gone ? `<i class="ggone" style="flex:${gone}">${gone}</i>` : ''}</div>` : ''}
       <div class="gtiles">${gepJelUj().length ? tile('Új bejelentés', gepJelUj().length, 'tbad', '', '', 'csapatoktól') : ''}${tile('Működik', cnt('ok'), 'tok', 'all', 'ok')}${tile('Hibás / javítás alatt', cnt('hibas') + cnt('javit'), 'tbad', 'all', 'hj')}${tile('Nincs visszajelzés', cnt('ism'), 'tmute', 'all', 'ism')}${gone ? tile('Nem találtuk', gone, 'tgone', 'all', 'gone') : ''}${tile('Nyitott teendő', R.length, 'twarn', '', '', R.filter(r => r[1][0] === 'bad').length + ' sürgős')}${tile('Nincs kiosztva', A.filter(x => !(x.csapat || []).length).length, 'tmute', 'cs', '-')}${AK.length ? tile('Kivont gépek', AK.length, 'tmute', 'all', 'kivon', 'elvitték / lecserélve') : ''}</div>`;
+    h += gepTipPanel(A);
     if (GEPCS && adm) h += gepCsEd();
     if (GEPAT && GEP[GEPAT.gid]) h += gepAtForm(GEPAT.gid);
     if (GEPJM && GEP[GEPJM]) h += gepJelForm(Object.assign({ id: GEPJM }, GEP[GEPJM]));
@@ -19494,7 +19507,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     else if (GEPV === 'matrix') h += gepMatrix(L);
     else if (GEPV === 'tabla') h += gepTable(L);
     else if (GEPV === 'kioszt') h += gepKioszt(L);
-    else { if (!adm && L.some(gepEnyem)) h += `<p class="hint">Elöl a csapatod gépei.</p>`; h += `<div class="gcards">${L.map(gepCard).join('')}</div>`; }
+    else { if (!adm && L.some(gepEnyem)) h += `<p class="hint">Elöl a csapatod gépei.</p>`; h += GEPF.tip || GEPF.all === 'kivon' || (!adm && L.some(gepEnyem)) ? `<div class="gcards">${L.map(gepCard).join('')}</div>` : GTORD.map(k => { const G = L.filter(x => (x.tipus || '') === k); return G.length ? `<h3 class="gtgrp">${GEPICO[k] || GEPICO.egyeb}<span>${esc(GTRV[k])}</span><b>${G.length}</b></h3><div class="gcards">${G.map(gepCard).join('')}</div>` : ''; }).join(''); }
     return h + '</div>'; }
   // ===== v178: kiosztási táblázat, tömeges kiosztás, előzmények, bejelentések, QR, kezelők =====
   let GSELG = new Set(), GBULK = new Set(), GEPJM = null, GEPKZ = null;
@@ -19695,9 +19708,11 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     for (const x of A) { const k = x.kezelo || {}, u = x.kulcs || {}, bad = x.allapot === 'hibas'; r0.push([{ v: x.azon || '', b: 1 }, x.papir || '', GTIP[x.tipus || ''], x.marka || '', x.modell || '', x.szin || '', gepHajt(x), x.talp === true ? 'igen' : x.talp === false ? 'nem' : '', x.berbeado || '', (x.csapat || []).map(gepCsN).join(', '), gepHely(x), GKEZ[k.mod || ''], k.hol || '', u.mod ? GKUL[u.mod] : '', bad ? { v: GALL.hibas[0], col: 'C92A2A', b: 1 } : (GALL[x.allapot] || GALL.ism)[0], x.hiba || '', gepTodo(x).map(t => t[1]).join('; '), x.megj || '', x.bejaras === 'nincs' ? 'nem találtuk' : 'megvan', gepMegr(x)]); }
     const r1 = [[{ v: 'Kiosztás csapatonként', s: 'title' }], [{ v: sub, s: 'sub' }], []], h1 = r1.length; r1.push(['Csapat', 'Gépszám', 'Típus', 'Állapot', 'Kezelő', 'Hely']);
     for (const c of gepCfg().csapatok.concat([{ id: '-', nev: 'Nincs kiosztva' }])) for (const x of A.filter(x => c.id === '-' ? !(x.csapat || []).length : (x.csapat || []).includes(c.id))) r1.push([c.id === '-' ? c.nev : gepCsN(c.id), x.azon, GTIP[x.tipus || ''], (GALL[x.allapot] || GALL.ism)[0], GKEZ[(x.kezelo || {}).mod || ''] + ((x.kezelo || {}).hol ? ' – ' + x.kezelo.hol : ''), gepHely(x)]);
+    const rT = [[{ v: 'Gépek típusonként', s: 'title' }], [{ v: sub, s: 'sub' }], []], hT = rT.length; rT.push(['Típus', 'Összesen', 'Működik', 'Hibás / javítás', 'Nincs visszajelzés', 'Nem találtuk', 'Használható', 'Emeleten', 'Földszinten', 'Kiosztva', 'Gyártmányok', 'Gépszámok']);
+    for (const t of gepTipStat(A.filter(x => !x.kivon))) rT.push([{ v: GTRV[t.k], b: 1 }, t.n, t.ok, t.hj, t.ism, t.gone, { v: t.hasz, b: 1 }, t.em, t.fsz, t.ki, t.mod.map(([m, n]) => m + (n > 1 ? ' ×' + n : '')).join(', '), t.L.map(x => x.azon).join(', ')]);
     const r2 = [[{ v: 'Teendők, eltérések', s: 'title' }], [{ v: sub, s: 'sub' }], []], h2 = r2.length; r2.push(['Gépszám', 'Súlyosság', 'Teendő']);
     for (const x of A) for (const t of gepTodo(x)) r2.push([x.azon, { bad: 'sürgős', warn: 'rendezni', man: 'kézi', mute: 'hiányzó adat' }[t[0]], t[1]]);
-    return Xlsx.build([{ name: 'Gépek', rows: r0, top: hr, head: 1, cols: [12, 12, 18, 12, 12, 12, 11, 9, 12, 24, 26, 26, 22, 22, 16, 30, 50, 34, 14, 26], foot, land: true, frz: hr + 1 }, { name: 'Kiosztás', rows: r1, top: h1, head: 1, cols: [26, 14, 20, 18, 34, 30], foot, frz: h1 + 1 }, { name: 'Teendők', rows: r2, top: h2, head: 1, cols: [14, 14, 80], foot, frz: h2 + 1 }]); }
+    return Xlsx.build([{ name: 'Típusonként', rows: rT, top: hT, head: 1, cols: [24, 10, 10, 13, 15, 12, 12, 10, 11, 10, 34, 50], foot, land: true, frz: hT + 1 }, { name: 'Gépek', rows: r0, top: hr, head: 1, cols: [12, 12, 18, 12, 12, 12, 11, 9, 12, 24, 26, 26, 22, 22, 16, 30, 50, 34, 14, 26], foot, land: true, frz: hr + 1 }, { name: 'Kiosztás', rows: r1, top: h1, head: 1, cols: [26, 14, 20, 18, 34, 30], foot, frz: h1 + 1 }, { name: 'Teendők', rows: r2, top: h2, head: 1, cols: [14, 14, 80], foot, frz: h2 + 1 }]); }
   async function gepImport(txt) { let J; try { J = JSON.parse(txt); } catch (e) { toast('A fájl nem olvasható JSON-ként.'); return; }
     const G = Array.isArray(J) ? J : (J.gepek || []), C = J.csapatok || (J.cfg || {}).csapatok; let n = 0;
     if (Array.isArray(C) && C.length) { const cur = gepCfg().csapatok.slice(); for (const c of C) { const i = cur.findIndex(z => z.id === c.id); if (i >= 0) cur[i] = Object.assign({}, cur[i], c); else cur.push(c); } await gepCfgPut({ csapatok: cur }); }
@@ -19873,6 +19888,14 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
 @media (max-width:760px){.gcards{grid-template-columns:1fr}.gfg{grid-template-columns:1fr 1fr}.gacts{margin-left:0;width:100%}.gacts .pri{flex:1}.gtiles{grid-template-columns:repeat(2,minmax(0,1fr))}.gtile b{font-size:20px}.gtile{padding:7px 10px 8px}.gtiles{gap:6px}.gtool{position:static}.gseg{width:100%}.gseg button{flex:1;padding:7px 4px}.gfsel{flex:1 1 45%}.gfsel select{flex:1;max-width:none}.gmod{padding:0}.gmodin{border-radius:0;max-height:100vh;min-height:100vh}.gmf{border-radius:0}}
 .gfbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:#FFF8E6;border:1px solid #F0C36D;border-radius:10px;padding:8px 12px;font-size:13px}
 .gjump{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px}.gjump span{color:var(--mute);margin-right:2px}.gjump button{font-family:var(--mono);font-size:12px;font-weight:700;border:1px solid #CBD4DC;background:#fff;border-radius:6px;padding:4px 7px}.gjump button.gs-bad{border-color:#D9443A;color:#B42318}.gjump button.gs-gone{border-color:#8E6CC9;color:#5B3E96}
+.gtip{display:flex;flex-direction:column;gap:8px}.gtiph{display:flex;gap:10px;align-items:baseline}.gtiph b{font-size:15px}.gtiph span{font-size:12px;color:var(--mute)}
+.gtipg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}.gtc{border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff);padding:10px 12px;display:flex;flex-direction:column;gap:6px;border-top:4px solid #8A99A8}
+.gtc-gemes{border-top-color:#E07B22}.gtc-ollos{border-top-color:#2D6FD6}.gtc-targonca{border-top-color:#2E9D5F}.gtc.on{box-shadow:0 0 0 2px #2D6FD6}
+.gtcb{display:flex;gap:10px;align-items:center;background:none;border:0;padding:0;text-align:left;cursor:pointer;font:inherit;color:inherit}.gtci svg{width:40px;height:40px;color:#44515E}.gtcn{display:flex;flex-direction:column}.gtcn b{font-size:28px;line-height:1}.gtcn small{font-size:13px;font-weight:600}
+.gtcs{display:flex;flex-wrap:wrap;gap:4px}.gtcs span{font-size:11.5px;border-radius:20px;padding:2px 8px;background:#F1F4F7}.gtcs .ok{background:#E7F6EC;color:#1E5E38}.gtcs .bad{background:#FDECEA;color:#B42318}.gtcs .gone{background:#F1EBFA;color:#5B3E96}.gtcs .mute{color:#5B6875}
+.gtcm{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:#44515E}.gtcmod{display:flex;flex-wrap:wrap;gap:4px}.gtcmod span{font-family:var(--mono);font-size:11px;color:#5B6875;border:1px dashed #CBD4DC;border-radius:5px;padding:1px 5px}
+.gtcl{display:flex;flex-wrap:wrap;gap:4px}.gtcl .gtg.gs-bad{border-color:#D9443A;color:#B42318}.gtcl .gtg.gs-gone{border-color:#8E6CC9;color:#5B3E96;text-decoration:line-through}
+.gtgrp{display:flex;align-items:center;gap:8px;margin:14px 0 6px;font-size:15px}.gtgrp svg{width:26px;height:26px;color:#44515E}.gtgrp b{font-size:12px;background:#EEF2F6;border-radius:20px;padding:1px 9px}
 @media (max-width:420px){.gkey{grid-template-columns:1fr 1fr}.gimg{height:150px}.gfacts{grid-template-columns:1fr}.gfg{grid-template-columns:1fr}}
 `; document.head.appendChild(st); }
 
