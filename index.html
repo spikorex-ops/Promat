@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v177 (2026.10.30.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v178 (2026.10.31.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -14273,9 +14273,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   /* ---------- tárolás: helyi napló + közös adatbázis ----------
      Minden írás előbb a böngésző helyi tárolójába (függő írások sora) kerül, és csak a közös adatbázis
      visszaigazolása után törlődik onnan. Böngészőbezárás, hálózati hiba után a következő megnyitáskor befejeződik. */
-  let ALVB = {}, ELSZ = {}, KTIG = {}, BEALL = {}, NAPLO = {}, MENT = {}, FOTO = {}, HIBA = {}, FEL = {}, CSOP = {}, GEP = {}, ASSETS = null, DBSTATE = window.claude ? 'wait' : 'off', LOADED = new Set(), AUTOBK = false;
-  const COLS = ['szereles', 'szerelok', 'napi', 'igazolas', 'problemak', 'modositas', 'kezi', 'elszamolas', 'kinaitig', 'beall', 'alvbiz', 'fotok', 'hibak', 'gep'];
-  const STORE = { szerelok: () => SZEREL, napi: () => NAPI, igazolas: () => IGAZ, problemak: () => PROB, modositas: () => MODS, elszamolas: () => ELSZ, alvbiz: () => ALVB, kinaitig: () => KTIG, beall: () => BEALL, fotok: () => FOTO, hibak: () => HIBA, feladat: () => FEL, csoport: () => CSOP, gep: () => GEP, terep: () => TERP, naplo: () => NAPLO, mentesek: () => MENT };
+  let ALVB = {}, ELSZ = {}, KTIG = {}, BEALL = {}, NAPLO = {}, MENT = {}, FOTO = {}, HIBA = {}, FEL = {}, CSOP = {}, GEP = {}, GJEL = {}, ASSETS = null, DBSTATE = window.claude ? 'wait' : 'off', LOADED = new Set(), AUTOBK = false;
+  const COLS = ['szereles', 'szerelok', 'napi', 'igazolas', 'problemak', 'modositas', 'kezi', 'elszamolas', 'kinaitig', 'beall', 'alvbiz', 'fotok', 'hibak', 'gep', 'gepjel'];
+  const STORE = { szerelok: () => SZEREL, napi: () => NAPI, igazolas: () => IGAZ, problemak: () => PROB, modositas: () => MODS, elszamolas: () => ELSZ, alvbiz: () => ALVB, kinaitig: () => KTIG, beall: () => BEALL, fotok: () => FOTO, hibak: () => HIBA, feladat: () => FEL, csoport: () => CSOP, gep: () => GEP, gepjel: () => GJEL, terep: () => TERP, naplo: () => NAPLO, mentesek: () => MENT };
   const LSK = c => 'promat-' + c;
   let PQ = []; try { PQ = JSON.parse(localStorage.getItem('promat-pending') || '[]') || []; } catch (e) { PQ = []; }
   let LASTOK = '', FLUSHING = false, FLT = null;
@@ -14456,7 +14456,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
         plain('szerelok', v => { SZEREL = v; }, (x, id) => x.id || id); plain('napi', v => { NAPI = v; }, (x, id) => x.id || id); plain('igazolas', v => { IGAZ = v; }, (x, id) => x.ho || id);
         plain('problemak', v => { PROB = v; for (const [id, x] of Object.entries(PROB)) if (!x.id) x.id = id; }, (x, id) => x.id || id);
         plain('elszamolas', v => { ELSZ = v; }, (x, id) => x.id || id); plain('alvbiz', v => { ALVB = v; }, (x, id) => x.id || id); plain('kinaitig', v => { KTIG = v; }, (x, id) => x.id || id); plain('beall', v => { BEALL = v; }); plain('fotok', v => { FOTO = v; }, (x, id) => x.id || id); plain('hibak', v => { HIBA = v; }, (x, id) => x.id || id);
-        plain('mentesek', v => { MENT = v; }, (x, id) => x.id || id); plain('feladat', v => { FEL = v; setTimeout(() => { try { fnCheck(); jogApply(); } catch (e) { } }, 50); }, (x, id) => x.id || id); plain('csoport', v => { CSOP = v; }, (x, id) => x.id || id); plain('gep', v => { GEP = v; }, (x, id) => id); plain('terep', v => { TERP = v; terepRebuild(); }, (x, id) => id);
+        plain('mentesek', v => { MENT = v; }, (x, id) => x.id || id); plain('feladat', v => { FEL = v; setTimeout(() => { try { fnCheck(); jogApply(); } catch (e) { } }, 50); }, (x, id) => x.id || id); plain('csoport', v => { CSOP = v; }, (x, id) => x.id || id); plain('gep', v => { GEP = v; }, (x, id) => id); plain('gepjel', v => { GJEL = v; }, (x, id) => x.id || id); plain('terep', v => { TERP = v; terepRebuild(); }, (x, id) => id);
         if (window.__SB) window.__SB.rpc('terep_on').then(r => { TEREP_ON = !r.error && r.data === true; terepRebuild(); szRefresh(); }).catch(() => { });
         sub('naplo', m => { NAPLO = {}; for (const x of Object.values(m)) if (x && x.id) NAPLO[x.id] = x; if (KV === 'naplo') szRefresh(); }, db.collection('naplo').orderBy('at', 'desc').limit(400));
         sub('modositas', m => { MODS = m; for (const o of pend('modositas')) applyLocal(o); if (modApplyAll()) { save(); schedule(); } else szRefresh(); });
@@ -16408,7 +16408,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     const tick = async () => { if (!QRS || !QRS.on) return; let txt = '';
       try { if (v.readyState >= 2) { if (det) { const r = await det.detect(v); if (r && r[0]) txt = r[0].rawValue; }
         else if (typeof jsQR === 'function') { const w = v.videoWidth, hh = v.videoHeight, s = Math.min(1, 720 / Math.max(w, hh)); cv.width = Math.round(w * s); cv.height = Math.round(hh * s); cx.drawImage(v, 0, 0, cv.width, cv.height); const im = cx.getImageData(0, 0, cv.width, cv.height), r = jsQR(im.data, im.width, im.height, { inversionAttempts: 'dontInvert' }); if (r) txt = r.data; } } } catch (e) { }
-      if (txt) { stop(); try { navigator.vibrate && navigator.vibrate(80); } catch (e) { } HELY.err = ''; HELY.pid = txt; HELY.q = qrPid(txt); if (TEL) KV = 'hely'; if (!helyFind(txt).length) HELY.err = 'A beolvasott kód nem ennek a projektnek a darabja: ' + txt.slice(0, 60); renderPane(); window.scrollTo(0, 0); return; }
+      if (txt) { stop(); try { navigator.vibrate && navigator.vibrate(80); } catch (e) { } if (/[#&]g=/.test(txt) && window.__gepDeep) { window.__gepDeep(txt); return; } HELY.err = ''; HELY.pid = txt; HELY.q = qrPid(txt); if (TEL) KV = 'hely'; if (!helyFind(txt).length) HELY.err = 'A beolvasott kód nem ennek a projektnek a darabja: ' + txt.slice(0, 60); renderPane(); window.scrollTo(0, 0); return; }
       setTimeout(tick, det ? 120 : 220); };
     tick();
   }
@@ -17652,7 +17652,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     if (!o || !o.c || !o.c.szereles) { toast('Ez a fájl nem a program mentése.'); return; }
     if (ASSETS && DBSTATE === 'on') await backupNow(true, 'visszaállítás előtti állapot');
     const keyOf = (c, d, id) => c === 'szereles' ? d.sys : (d && (d.id || d.ho)) || id;
-    for (const c of COLS) { if (c === 'gep' && !o.c.gep) continue; // v170: régi mentésben nincs gép – ne törölje a gépeket
+    for (const c of COLS) { if ((c === 'gep' || c === 'gepjel') && !o.c[c]) continue; // v170: régi mentésben nincs gép – ne törölje a gépeket
       const nw = o.c[c] || {}, cur = {};
       if (c === 'szereles') for (const [s, d] of Object.entries(SZDOC)) cur[docId(s)] = d; else if (c === 'kezi') for (const m of S.manual) cur[docId(String(m.id))] = m; else for (const [k, v] of Object.entries(STORE[c]())) cur[docId(k)] = v;
       for (const [id, d] of Object.entries(nw)) enqueue({ col: c, id, key: keyOf(c, d, id), k: 'set', data: d });
@@ -19289,7 +19289,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
   const GKEZ = { rajta: 'A gépen van (nem levehető)', gepnel: 'Megvan – a gépnél / a csapatnál', mashol: 'Máshol van', nincs: 'Nem található', na: 'Nem kell (pl. targonca)', '': 'Nincs adat' };
   const GKUL = { van: 'Megvan', maszek: 'Pótkulccsal megy (saját kulcs nincs)', nincs: 'Nincs kulcs', na: 'Nem kell', '': 'Nincs adat' };
   const gepCfg = () => (GEP._cfg && GEP._cfg.csapatok) ? GEP._cfg : { csapatok: [] };
-  const gepL = () => Object.entries(GEP).filter(([k, x]) => k !== '_cfg' && x && x.azon != null).map(([k, x]) => Object.assign({ id: k }, x)).sort((a, b) => String(a.azon).localeCompare(String(b.azon), 'hu', { numeric: true }));
+  const gepL = () => Object.entries(GEP).filter(([k, x]) => k !== '_cfg' && x && x.azon != null && !x.kz).map(([k, x]) => Object.assign({ id: k }, x)).sort((a, b) => String(a.azon).localeCompare(String(b.azon), 'hu', { numeric: true }));
   const gepCs = id => gepCfg().csapatok.find(c => c.id === id);
   function gepCsN(id) { const c = gepCs(id); if (!c) return id ? '(törölt csapat)' : ''; if (!ISADM() && c.ceg && c.ceg !== MYCEG() && !jogMas('nevek')) return 'más csapat'; return c.nev; }
   const gepEnyem = x => (x.csapat || []).some(id => { const c = gepCs(id); return c && c.ceg && c.ceg === MYCEG(); });
@@ -19366,9 +19366,9 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     if (x.kivon) return gepKivCard(x);
     return `<article class="gcard gs-${st}" id="gep-${esc(x.id)}">
       ${gepImg(x)}
-      <header class="ghead2">
+      <header class="ghead2">${adm ? `<label class="gpick" title="Kijelölés tömeges kiosztáshoz"><input type="checkbox" data-gpick="${esc(x.id)}"${GSELG.has(x.id) ? ' checked' : ''}></label>` : ''}
         <dl class="gkey"><div><dt>Gépszám</dt><dd class="gaz">${esc(x.azon || '–')}</dd></div><div><dt>Típusazonosító</dt><dd class="gtsz${x.modell ? '' : ' gfm'}">${esc(x.modell || 'pontosítandó')}</dd></div><div><dt>Típus</dt><dd>${esc(x.tipus ? GTIP[x.tipus] : 'pontosítandó')}${x.marka ? `<small>${esc(x.marka)}</small>` : ''}</dd></div></dl>
-        <div class="gcsr">${x.bejaras === 'nincs' ? '<span class="gpill ggone"><i></i>Nem találtuk</span>' : gepPill(x)}${(x.csapat || []).length ? (x.csapat || []).map(id => `<span class="gcs">${esc(gepCsN(id))}</span>`).join('') : '<span class="gcs gnone">nincs kiosztva</span>'}</div></header>
+        <div class="gcsr">${gepJelOf(x.id).length ? `<span class="gpill gbad">📣 ${gepJelOf(x.id).length} bejelentés</span>` : ''}${x.bejaras === 'nincs' ? '<span class="gpill ggone"><i></i>Nem találtuk</span>' : gepPill(x)}${(x.csapat || []).length ? (x.csapat || []).map(id => `<span class="gcs">${esc(gepCsN(id))}</span>`).join('') : '<span class="gcs gnone">nincs kiosztva</span>'}</div></header>
       ${x.allapot === 'hibas' || x.allapot === 'javit' ? `<div class="ghiba"><b>${x.allapot === 'hibas' ? 'Hiba' : 'Javítás alatt'}</b>${esc(x.hiba || 'nincs leírva')}</div>` : ''}
       <div class="gfacts">${gFact('👥', 'Hozzárendelve', esc((x.csapat || []).map(gepCsN).join(', ') || 'senkihez'), (x.csapat || []).length ? '' : 'gfw')}${gFact('📍', 'Hely', esc(gepHely(x) || '–'), gepHely(x) ? '' : 'gfm')}${gFact('⚙', 'Hajtás', esc([gepHajt(x), gepTalp(x)].filter(Boolean).join(', ')))}${gFact('🎛', 'Kezelő', esc(kez || 'nincs adat'), k.mod === 'nincs' ? 'gfb' : k.mod === 'mashol' ? 'gfw' : kez ? '' : 'gfm')}${x.tipus === 'targonca' || (u.mod && u.mod !== 'na') ? gFact('🔑', 'Kulcs', esc(GKUL[u.mod || '']), u.mod === 'nincs' ? 'gfb' : u.mod === 'maszek' ? 'gfw' : '') : ''}${gFact('🏢', 'Bérbeadó', esc(x.berbeado || ''))}${x.papir && x.papir !== x.azon ? gFact('📄', 'Papíron', esc(x.papir), 'gfw') : ''}${mc ? gFact('📋', 'Megrendelő', esc(m.lista ? 'hozzánk rendelve' + (m.szint ? ' · ' + m.szint : '') : 'nincs a listán'), m.lista ? '' : 'gfw') : ''}</div>
       ${x.megj ? `<p class="gmegj">${esc(x.megj)}</p>` : ''}
@@ -19376,12 +19376,15 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       <details class="gdet"${GEPOPEN.has(x.id) ? ' open' : ''} data-gdet="${esc(x.id)}"><summary><span>Részletek</span><span class="gdc">${RD.length ? RD.length + ' adat · ' : ''}${nf} fotó · ${N.length} napló</span></summary>
         <div class="gdin">${RD.length ? `<div class="gspec">${RD.map(r => `<div><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join('')}</div>` : '<p class="hint">Műszaki és bérleti adat még nincs megadva (az adattábláról vagy a szállítólevélről pótolható).</p>'}
         ${x.leiras ? `<p class="gmegj">${esc(x.leiras)}</p>` : ''}
+        ${gepHistHtml(x)}${gepKezOf(x.id).length ? `<div class="gsec"><h5>Kezelő(k)</h5>${gepKezOf(x.id).map(k => `<div class="gkzmini"><b>${esc(k.azon)}</b> ${esc(GKEZ[k.mod || ''] || '')}${k.hol ? ' – ' + esc(k.hol) : ''}</div>`).join('')}</div>` : ''}
+        <div class="gsec"><h5>QR-kód</h5><div class="gqrrow">${gepQrSvg(x, 84)}<span class="hint">Beolvasva ennek a gépnek az adatlapja nyílik. ${adm ? `<button class="b sm" data-gqr1="${esc(x.id)}">🏷 Matrica nyomtatása</button>` : ''}</span></div></div>
         <div class="gsec"><h5>Fotók</h5>${fotoStrip('', canF ? ['egyeb'] : [], 'gep:' + x.id)}</div>
         <div class="gsec"><h5>Napló</h5>${N.length ? `<ol class="gnap">${N.map(n => `<li><time>${esc(huD(String(n.t).slice(0, 10)))} ${esc(String(n.t).slice(11, 16))}</time><span>${esc(n.sz)}${n.ki ? ` <small>– ${esc(n.ki)}</small>` : ''}</span></li>`).join('')}</ol>` : '<p class="hint">Még nincs bejegyzés.</p>'}
         ${adm ? `<div class="gnapf"><input data-gnapin="${esc(x.id)}" placeholder="Új napló-bejegyzés…"><button class="b sm" data-gnap="${esc(x.id)}">Hozzáad</button></div>` : ''}</div>
         ${x.upd ? `<p class="gupd">Módosítva: ${esc(huD(String(x.upd.at || '').slice(0, 10)))} ${esc(String(x.upd.at || '').slice(11, 16))}${x.upd.by ? ' · ' + esc(x.upd.by) : ''}</p>` : ''}</div>
       </details>
-      ${adm ? `<footer class="gfoot"><select data-gall="${esc(x.id)}" title="Állapot módosítása" class="gsel-${gAll(x)[1]}">${Object.entries(GALL).map(([v, a]) => `<option value="${v}"${(x.allapot || 'ism') === v ? ' selected' : ''}>${a[0]}</option>`).join('')}</select><select data-gmv="${esc(x.id)}" title="Kihez van hozzárendelve – átadás másik csapatnak" class="gselcs"><option value="">👥 ${esc((x.csapat || []).map(gepCsN).join(', ') || 'Hozzárendelés…')}</option>${gepCfg().csapatok.map(c => `<option value="${esc(c.id)}">→ ${esc(c.nev)}</option>`).join('')}<option value="-">→ senkihez</option></select><span class="gfbtn"><button class="b sm" data-gevt="${esc(x.id)}" title="Csere, elvitték, kezelő elvitték, visszahozták…">⇄ Esemény / csere</button><button class="b sm" data-geped="${esc(x.id)}">✎ Szerkesztés</button></span></footer>` : ''}
+      ${!adm && window.__SB && ROLE() !== 'vendeg' ? `<footer class="gfoot"><span></span><button class="b sm pri" data-gjel="${esc(x.id)}">📣 Bejelentés (hiba, kezelő…)</button></footer>` : ''}
+      ${adm ? `<footer class="gfoot"><select data-gall="${esc(x.id)}" title="Állapot módosítása" class="gsel-${gAll(x)[1]}">${Object.entries(GALL).map(([v, a]) => `<option value="${v}"${(x.allapot || 'ism') === v ? ' selected' : ''}>${a[0]}</option>`).join('')}</select><select data-gmv="${esc(x.id)}" title="Kihez van hozzárendelve – átadás másik csapatnak" class="gselcs"><option value="">👥 ${esc((x.csapat || []).map(gepCsN).join(', ') || 'Hozzárendelés…')}</option>${gepCfg().csapatok.map(c => `<option value="${esc(c.id)}">→ ${esc(c.nev)}</option>`).join('')}<option value="-">→ senkihez</option></select><span class="gfbtn"><button class="b sm" data-gjel="${esc(x.id)}" title="Bejelentés rögzítése">📣</button><button class="b sm" data-gevt="${esc(x.id)}" title="Csere, elvitték, kezelő elvitték, visszahozták…">⇄ Esemény / csere</button><button class="b sm" data-geped="${esc(x.id)}">✎ Szerkesztés</button></span></footer>` : ''}
     </article>`; }
   // ---- v176: események, csere, kivonás (elvitték / visszavitték) ----
   const GKIV = { elvitte: 'Elvitték', visszavitt: 'Visszavitték a bérbeadónak', csere: 'Lecserélve', egyeb: 'Kivonva' };
@@ -19444,7 +19447,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       <div class="gmf"><button class="b sm" data-gcsadd="1">+ Új csapat</button><span style="flex:1"></span><button class="b sm pri" data-gcsx="1">Kész</button></div></div></div>`; }
   function gepTable(L) {
     return `<div class="gtw"><table class="gtab"><thead><tr><th></th><th>Gépszám</th><th>Típusazonosító / típus</th><th>Csapat</th><th>Hely</th><th>Kezelő / kulcs</th><th>Állapot</th><th>Teendő</th></tr></thead><tbody>
-      ${L.map(x => { const T = gTodos(x), k = x.kezelo || {}, u = x.kulcs || {}; return `<tr data-ggo="${esc(x.id)}" class="gs-${gSt(x)}"><td class="gtico">${GEPICO[x.tipus || '']}</td><td><b class="gaz">${esc(x.azon)}</b>${x.papir && x.papir !== x.azon ? `<small class="gwt">papíron: ${esc(x.papir)}</small>` : ''}${x.berbeado ? `<small>${esc(x.berbeado)}</small>` : ''}</td><td><b>${esc(x.modell || '–')}</b><small>${esc([x.tipus ? GTIP[x.tipus] : 'típus pontosítandó', x.marka, gepHajt(x), gepTalp(x)].filter(Boolean).join(' · '))}</small></td><td>${(x.csapat || []).map(id => esc(gepCsN(id))).join('<br>') || '<span class="hint">–</span>'}</td><td>${esc(gepHely(x)) || '<span class="hint">–</span>'}${gepMegr(x) ? `<small class="${(x.megr || {}).lista ? '' : 'gwt'}">megr.: ${esc((x.megr || {}).lista ? 'hozzánk' + ((x.megr || {}).szint ? ' · ' + x.megr.szint.toLowerCase() : '') : 'nincs a listán')}</small>` : ''}</td><td class="${k.mod === 'nincs' ? 'gbt' : k.mod === 'mashol' ? 'gwt' : ''}">${esc(GKEZ[k.mod || ''])}${k.hol ? `<small>${esc(k.hol)}</small>` : ''}${u.mod && u.mod !== 'na' ? `<small class="${u.mod === 'nincs' ? 'gbt' : u.mod === 'maszek' ? 'gwt' : ''}">kulcs: ${esc(GKUL[u.mod])}</small>` : ''}</td><td>${x.bejaras === 'nincs' ? '<span class="gpill ggone"><i></i>Nem találtuk</span>' : gepPill(x)}</td><td>${T.length ? `<span class="gnum t${T[0][0]}">${T.length}</span>` : '<span class="gok">✓</span>'}</td></tr>`; }).join('')}</tbody></table></div>
+      ${L.map(x => { const T = gTodos(x), k = x.kezelo || {}, u = x.kulcs || {}; return `<tr data-ggo="${esc(x.id)}" class="gs-${gSt(x)}"><td class="gtico">${ISADM() ? `<input type="checkbox" class="gpickt" data-gpick="${esc(x.id)}"${GSELG.has(x.id) ? ' checked' : ''}>` : ''}${GEPICO[x.tipus || '']}</td><td><b class="gaz">${esc(x.azon)}</b>${x.papir && x.papir !== x.azon ? `<small class="gwt">papíron: ${esc(x.papir)}</small>` : ''}${x.berbeado ? `<small>${esc(x.berbeado)}</small>` : ''}</td><td><b>${esc(x.modell || '–')}</b><small>${esc([x.tipus ? GTIP[x.tipus] : 'típus pontosítandó', x.marka, gepHajt(x), gepTalp(x)].filter(Boolean).join(' · '))}</small></td><td>${(x.csapat || []).map(id => esc(gepCsN(id))).join('<br>') || '<span class="hint">–</span>'}</td><td>${esc(gepHely(x)) || '<span class="hint">–</span>'}${gepMegr(x) ? `<small class="${(x.megr || {}).lista ? '' : 'gwt'}">megr.: ${esc((x.megr || {}).lista ? 'hozzánk' + ((x.megr || {}).szint ? ' · ' + x.megr.szint.toLowerCase() : '') : 'nincs a listán')}</small>` : ''}</td><td class="${k.mod === 'nincs' ? 'gbt' : k.mod === 'mashol' ? 'gwt' : ''}">${esc(GKEZ[k.mod || ''])}${k.hol ? `<small>${esc(k.hol)}</small>` : ''}${u.mod && u.mod !== 'na' ? `<small class="${u.mod === 'nincs' ? 'gbt' : u.mod === 'maszek' ? 'gwt' : ''}">kulcs: ${esc(GKUL[u.mod])}</small>` : ''}</td><td>${x.bejaras === 'nincs' ? '<span class="gpill ggone"><i></i>Nem találtuk</span>' : gepPill(x)}</td><td>${T.length ? `<span class="gnum t${T[0][0]}">${T.length}</span>` : '<span class="gok">✓</span>'}</td></tr>`; }).join('')}</tbody></table></div>
       <div class="gtl-m">${L.map(x => { const T = gTodos(x); return `<button class="gmrow gs-${gSt(x)}" data-ggo="${esc(x.id)}"><span class="gtico">${GEPICO[x.tipus || '']}</span><span class="gmrt"><b class="gaz">${esc(x.azon)}</b><small>${esc([x.modell, x.tipus ? GTIP[x.tipus] : ''].filter(Boolean).join(' · ') || 'típus pontosítandó')} · ${esc((x.csapat || []).map(gepCsN).join(', ') || 'nincs kiosztva')}</small></span>${x.bejaras === 'nincs' ? '<span class="gpill ggone"><i></i>Nem találtuk</span>' : gepPill(x)}${T.length ? `<span class="gnum t${T[0][0]}">${T.length}</span>` : ''}</button>`; }).join('')}</div>`; }
   function gepKioszt(L) { const C = gepCfg().csapatok, adm = ISADM(), opt = cur => `<option value="">Áthelyez…</option>${C.map(c => `<option value="${esc(c.id)}"${cur === c.id ? ' disabled' : ''}>→ ${esc(c.nev)}</option>`).join('')}<option value="-">→ nincs kiosztva</option>`;
     const col = (id, nev, M, ceg) => `<section class="gkc${id === '-' ? ' gkc0' : ''}"><header class="gkh"><div><b>${esc(nev)}</b>${ceg ? `<small>${esc(cegNev(ceg))}</small>` : ''}</div><span class="gkn">${M.length}</span></header>
@@ -19462,31 +19465,152 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     const tile = (lab, n, cl, f, v, sub) => `<button class="gtile ${cl}${f && GEPF[f] === v ? ' on' : ''}"${f ? ` data-gflt="${f}" data-v="${esc(v)}"` : ''}><span>${lab}</span><b>${n}</b>${sub ? `<small>${sub}</small>` : ''}</button>`;
     const sel = (f, l, O) => `<label class="gfsel"><span>${l}</span><select data-gsel="${f}">${O.map(([v, t]) => `<option value="${esc(v)}"${(GEPF[f] || '') === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
     let h = `<div class="sec gep"><div class="ghero"><div><p class="gsum">${A.length} gép · ${esc(Object.entries(GTIP).map(([k, l]) => [l, A.filter(x => (x.tipus || '') === k).length]).filter(r => r[1]).map(r => r[1] + ' ' + r[0].toLowerCase()).join(' · '))}</p></div>
-      <div class="gacts">${adm ? `<button class="b sm pri" data-gepadd="1">+ Új gép</button>` : ''}<button class="b sm" data-gxl="1">⤓ Excel</button>${adm ? `<details class="gmenu"><summary class="b sm" title="További műveletek">⋯</summary><div><button data-gcsed="1">👥 Csapatok szerkesztése</button><button data-gimp="1">⤒ Betöltés fájlból (JSON)</button><button data-gexp="1">⤓ Mentés fájlba (JSON)</button></div></details>` : ''}</div></div>
+      <div class="gacts">${adm ? `<button class="b sm pri" data-gepadd="1">+ Új gép</button>` : ''}<button class="b sm" data-gxl="1">⤓ Excel</button>${adm ? `<details class="gmenu"><summary class="b sm" title="További műveletek">⋯</summary><div><button data-gcsed="1">👥 Csapatok szerkesztése</button><button data-gqrp="1">🏷 QR-matricák nyomtatása</button><button data-gimp="1">⤒ Betöltés fájlból (JSON)</button><button data-gexp="1">⤓ Mentés fájlba (JSON)</button></div></details>` : ''}</div></div>
       ${A.length ? `<div class="gbar" title="Állapot szerinti megoszlás">${[['ok', cnt('ok')], ['javit', cnt('javit')], ['hibas', cnt('hibas')], ['ism', cnt('ism')]].filter(r => r[1]).map(([s, n]) => `<i class="g${GALL[s][1]}" style="flex:${n}">${n}</i>`).join('')}${gone ? `<i class="ggone" style="flex:${gone}">${gone}</i>` : ''}</div>` : ''}
-      <div class="gtiles">${tile('Működik', cnt('ok'), 'tok', 'all', 'ok')}${tile('Hibás / javítás alatt', cnt('hibas') + cnt('javit'), 'tbad', 'all', 'hj')}${tile('Nincs visszajelzés', cnt('ism'), 'tmute', 'all', 'ism')}${gone ? tile('Nem találtuk', gone, 'tgone', 'all', 'gone') : ''}${tile('Nyitott teendő', R.length, 'twarn', '', '', R.filter(r => r[1][0] === 'bad').length + ' sürgős')}${tile('Nincs kiosztva', A.filter(x => !(x.csapat || []).length).length, 'tmute', 'cs', '-')}${AK.length ? tile('Kivont gépek', AK.length, 'tmute', 'all', 'kivon', 'elvitték / lecserélve') : ''}${cfg.megrDatum ? tile('Megrendelő szerint hozzánk', A.filter(x => (x.megr || {}).lista).length, 'tinfo', '', '', A.filter(x => !(x.megr || {}).lista).length + ' nincs a listán · ' + esc(huD(cfg.megrDatum))) : ''}</div>`;
+      <div class="gtiles">${gepJelUj().length ? tile('Új bejelentés', gepJelUj().length, 'tbad', '', '', 'csapatoktól') : ''}${tile('Működik', cnt('ok'), 'tok', 'all', 'ok')}${tile('Hibás / javítás alatt', cnt('hibas') + cnt('javit'), 'tbad', 'all', 'hj')}${tile('Nincs visszajelzés', cnt('ism'), 'tmute', 'all', 'ism')}${gone ? tile('Nem találtuk', gone, 'tgone', 'all', 'gone') : ''}${tile('Nyitott teendő', R.length, 'twarn', '', '', R.filter(r => r[1][0] === 'bad').length + ' sürgős')}${tile('Nincs kiosztva', A.filter(x => !(x.csapat || []).length).length, 'tmute', 'cs', '-')}${AK.length ? tile('Kivont gépek', AK.length, 'tmute', 'all', 'kivon', 'elvitték / lecserélve') : ''}${cfg.megrDatum ? tile('Megrendelő szerint hozzánk', A.filter(x => (x.megr || {}).lista).length, 'tinfo', '', '', A.filter(x => !(x.megr || {}).lista).length + ' nincs a listán · ' + esc(huD(cfg.megrDatum))) : ''}</div>`;
     if (GEPCS && adm) h += gepCsEd();
+    if (GEPJM && GEP[GEPJM]) h += gepJelForm(Object.assign({ id: GEPJM }, GEP[GEPJM]));
+    if (GEPKZ && adm) h += gepKezForm(GEPKZ);
     if (GEPEV && adm && GEP[GEPEV]) h += gepEvForm(Object.assign({ id: GEPEV }, GEP[GEPEV]));
     if (adm && (GEPNEW || (GEPED && GEP[GEPED]))) h += gepForm(GEPNEW ? { id: GEPNEW, csapat: GEPF.cs && GEPF.cs !== '-' && GEPF.cs !== 'en' ? [GEPF.cs] : [] } : Object.assign({ id: GEPED }, GEP[GEPED]));
+    h += gepJelPanel();
     const lim = GEPOPEN.has('_tall') ? R.length : 6;
     h += `<details class="gteen"${GEPOPEN.has('_teendo') ? ' open' : ''} data-gdet="_teendo"><summary><b>Figyelmet igényel</b><span>${R.length ? `${R.filter(r => r[1][0] === 'bad').length} sürgős · ${R.filter(r => r[1][0] === 'warn').length} rendezendő${R.filter(r => r[1][0] === 'man').length ? ' · ' + R.filter(r => r[1][0] === 'man').length + ' kézi' : ''}` : 'minden rendben'}</span></summary>
       ${R.length ? `<ul class="gtr">${R.slice(0, lim).map(([x, z]) => `<li class="t${z[0]}"><button class="gtg" data-ggo="${esc(x.id)}">${esc(x.azon)}</button><span>${esc(z[1])}</span></li>`).join('')}</ul>${R.length > 6 ? `<button class="gmore" data-gtall="1">${GEPOPEN.has('_tall') ? 'Kevesebb' : `Mind a ${R.length} mutatása`}</button>` : ''}` : ''}
       ${MI.length ? `<details class="gmiss"><summary>Hiányzó adatok ${MI.length} gépnél</summary><ul>${MI.map(([x, t]) => `<li><button class="gtg" data-ggo="${esc(x.id)}">${esc(x.azon)}</button><span>${esc(t.find(z => z[0] === 'mute')[1].replace('Hiányzó adat: ', ''))}</span></li>`).join('')}</ul></details>` : ''}</details>`;
-    h += `<div class="gtool"><div class="gseg">${[['kartya', 'Kártyák'], ['tabla', 'Táblázat'], ['kioszt', 'Kiosztás csapatonként']].map(([v, l]) => `<button class="${GEPV === v ? 'on' : ''}" data-gview="${v}">${l}</button>`).join('')}</div>
+    h += `<div class="gtool"><div class="gseg">${[['kartya', 'Kártyák'], ['tabla', 'Táblázat'], ['matrix', 'Kiosztási táblázat'], ['kioszt', 'Csapatonként'], ['kezelo', 'Kezelők']].map(([v, l]) => `<button class="${GEPV === v ? 'on' : ''}" data-gview="${v}">${l}</button>`).join('')}</div>
       <input class="gq" data-gq type="search" placeholder="Keresés: gépszám, gyártmány, hely, kezelő…" value="${esc(GEPF.q)}">
       <div class="gfsels">${sel('all', 'Állapot', [['', 'Mind'], ...Object.entries(GALL).map(([k, a]) => [k, a[0] + ' (' + cnt(k) + ')']), ...(gone ? [['gone', 'Nem találtuk (' + gone + ')']] : []), ...(AK.length ? [['kivon', 'Kivont gépek (' + AK.length + ')']] : [])])}${sel('tip', 'Típus', [['', 'Mind'], ...Object.entries(GTIP).filter(([k]) => A.some(x => (x.tipus || '') === k)).map(([k, l]) => [k || '_', l])])}${GEPV !== 'kioszt' ? sel('cs', 'Csapat', [['', 'Mind'], ...(!adm && A.some(gepEnyem) ? [['en', 'Saját csapatom']] : []), ...cfg.csapatok.filter(c => adm || gepCsN(c.id) !== 'más csapat').map(c => [c.id, gepCsN(c.id)]), ['-', 'Nincs kiosztva']]) : ''}${GEPV === 'kartya' ? sel('so', 'Sorrend', [['surg', 'Sürgősség'], ['azon', 'Gépszám'], ['csapat', 'Csapat']]) : ''}${fon ? '<button class="b sm" data-gclr="1">Szűrés törlése</button>' : ''}</div></div>`;
+    h += gepBulkBar(L);
     if (!A.length) h += `<div class="gempty">${GEPICO.ollos}<b>Még nincs gép rögzítve</b>${adm ? '<span>Az „+ Új gép” gombbal, vagy a ⋯ menüben fájlból (JSON) vehetők fel.</span>' : ''}</div>`;
     else if (!L.length) h += `<div class="gempty"><b>A szűrésnek egy gép sem felel meg</b><button class="b sm" data-gclr="1">Szűrés törlése</button></div>`;
+    else if (GEPV === 'kezelo') h += gepKezView(A);
+    else if (GEPV === 'matrix') h += gepMatrix(L);
     else if (GEPV === 'tabla') h += gepTable(L);
     else if (GEPV === 'kioszt') h += gepKioszt(L);
     else { if (!adm && L.some(gepEnyem)) h += `<p class="hint">Elöl a csapatod gépei.</p>`; h += `<div class="gcards">${L.map(gepCard).join('')}</div>`; }
     return h + '</div>'; }
+  // ===== v178: kiosztási táblázat, tömeges kiosztás, előzmények, bejelentések, QR, kezelők =====
+  let GSELG = new Set(), GBULK = new Set(), GEPJM = null, GEPKZ = null;
+  // -- hozzárendelési előzmények: hist = [{ c, tol, ig }] – minden csapatváltozás (bárhonnan) itt vezetődik
+  function gepHistSync(old, o) { const d = today(), first = ((old || o).naplo || [])[0], d0 = first ? String(first.t).slice(0, 10) : d;
+    let H = JSON.parse(JSON.stringify(o.hist || (old && old.hist) || ((old ? old.csapat : o.csapat) || []).map(c => ({ c, tol: d0, ig: '' }))));
+    const open = c => H.find(h => h.c === c && !h.ig), nowC = o.kivon ? [] : (o.csapat || []), kd = o.kivon ? (o.kivon.d || d) : d;
+    for (const h of H) if (!h.ig && !nowC.includes(h.c)) h.ig = kd;
+    for (const c of nowC) if (!open(c)) H.push({ c, tol: d, ig: '' });
+    o.hist = H; }
+  const gNap = (a, b) => { if (!a) return ''; const t0 = new Date(a + 'T12:00:00'), t1 = b ? new Date(b + 'T12:00:00') : new Date(); return Math.max(1, Math.round((t1 - t0) / 864e5) + 1); };
+  function gepHistHtml(x) { const H = (x.hist || (x.csapat || []).map(c => ({ c, tol: '', ig: '' }))).slice().sort((a, b) => String(b.tol).localeCompare(String(a.tol)));
+    if (!H.length) return '';
+    return `<div class="gsec"><h5>Hozzárendelési előzmények</h5><table class="ghist">${H.map(h => `<tr${h.ig ? '' : ' class="gnow"'}><td>${esc(gepCsN(h.c) || '–')}</td><td>${h.tol ? esc(huD(h.tol)) : '?'} – ${h.ig ? esc(huD(h.ig)) : '<b>most is</b>'}</td><td>${h.tol ? gNap(h.tol, h.ig) + ' nap' : ''}</td></tr>`).join('')}</table></div>`; }
+  async function gepSetCs(id, nc, why) { const x = GEP[id]; if (!x) return; const el = (x.csapat || []).map(gepCsN).join(', ') || 'senki', uj = nc.map(gepCsN).join(', ') || 'senki';
+    if (el === uj && (x.csapat || []).length === nc.length) return; await gepPut(id, Object.assign({}, x, { csapat: nc }), (why || 'Hozzárendelés') + ': ' + el + ' → ' + uj); }
+  // -- kiosztási táblázat (gépek × csapatok)
+  function gepMatrix(L) { const C = gepCfg().csapatok, adm = ISADM();
+    const head = `<div class="gmx-r gmx-h"><span class="gmx-g">Gép</span>${C.map(c => `<span class="gmx-c" title="${esc(c.nev)}">${esc(gepCsN(c.id))}<small>${L.filter(x => (x.csapat || []).includes(c.id)).length} gép</small></span>`).join('')}</div>`;
+    return `<div class="gmx" style="--n:${C.length}">${head}${L.map(x => `<div class="gmx-r gs-${gSt(x)}"><span class="gmx-g"><button class="gtg" data-ggo="${esc(x.id)}">${esc(x.azon)}</button><small>${esc(x.modell || GTIP[x.tipus || ''])}</small>${gepPill(x)}</span>${C.map(c => { const on = (x.csapat || []).includes(c.id); return `<span class="gmx-c"><button class="gmx-b${on ? ' on' : ''}" ${adm ? `data-gmx="${esc(x.id)}|${esc(c.id)}"` : 'disabled'} title="${esc(gepCsN(c.id))}">${on ? '✓' : ''}<em>${esc(gepCsN(c.id))}</em></button></span>`; }).join('')}</div>`).join('')}</div>
+      <p class="hint">${adm ? 'Kattints egy cellára: a gép az adott csapathoz kerül, vagy kikerül onnan. Egy gép egyszerre több csapathoz is tartozhat; minden változás dátummal bekerül az előzményekbe.' : 'Melyik gép melyik csapathoz tartozik.'}</p>`; }
+  // -- tömeges kiosztás
+  function gepBulkBar(L) { if (!ISADM() || GEPV === 'kezelo') return ''; const n = GSELG.size, C = gepCfg().csapatok;
+    if (!n) return GEPV === 'kartya' || GEPV === 'tabla' ? `<p class="gbulkhint">Tömeges kiosztás: jelöld ki a gépeket a ☐ négyzettel, vagy <button class="gkb2" data-gball="1">jelöld ki mind a ${L.length} látható gépet</button>.</p>` : '';
+    return `<div class="gbulk"><b>${n} gép kijelölve</b><span class="gbulkc">${C.map(c => `<button class="${GBULK.has(c.id) ? 'on' : ''}" data-gbc="${esc(c.id)}">${esc(c.nev)}</button>`).join('')}</span>
+      <span class="gbulka"><button class="b sm pri" data-gbop="add" title="A kijelölt csapatok hozzáadása (a meglévők maradnak)">+ Hozzáad</button><button class="b sm" data-gbop="set" title="A hozzárendelés lecserélése a kijelölt csapatokra">⇄ Lecserél</button><button class="b sm" data-gbop="del" title="A kijelölt csapatok elvétele">− Elvesz</button><button class="b sm" data-gqrsel="1">🏷 QR</button><button class="b sm" data-gbx="1">✕ Kijelölés törlése</button></span></div>`; }
+  async function gepBulk(op) { const C = [...GBULK]; if (op !== 'set' && !C.length) { toast('Válassz legalább egy csapatot.'); return; } let n = 0;
+    for (const id of GSELG) { const x = GEP[id]; if (!x || x.kivon) continue; const cur = x.csapat || []; const nc = op === 'add' ? [...new Set(cur.concat(C))] : op === 'del' ? cur.filter(c => !C.includes(c)) : C.slice(); await gepSetCs(id, nc, 'Tömeges kiosztás'); n++; }
+    toast(n + ' gép kiosztása módosítva'); GSELG.clear(); renderPane(); }
+  // -- bejelentések (csapattagok telefonról): col 'gepjel'
+  const GJT = { hibas: '⚠ A gép hibás / nem működik', kez_nincs: '🎛 A kezelő nincs meg', kez_mashol: '🎛 A kezelő máshol van', kulcs: '🔑 Kulcs gond', elvitte: '🚚 A gépet elvitték', egyeb: '📝 Egyéb' };
+  const gepJelL = () => Object.values(GJEL || {}).filter(j => j && j.gep).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const gepJelUj = () => gepJelL().filter(j => j.st === 'uj' && GEP[j.gep]);
+  const gepJelOf = id => gepJelUj().filter(j => j.gep === id);
+  function gepJelForm(x) { return `<div class="gmod"><div class="gmodin gmsm" id="gep-jel"><div class="gmh"><div><small>Bejelentés</small><b>${esc(x.azon)}</b></div><button class="gx" data-gjelx="1">✕</button></div>
+    <div class="gmb"><p class="hint">${esc(x.modell || GTIP[x.tipus || ''])} · ${esc(gepHely(x) || '')}</p><label class="gf gw"><span>Mi a gond?</span><select data-gjt="1">${Object.entries(GJT).map(([a, b]) => `<option value="${a}">${esc(b)}</option>`).join('')}</select></label>
+    <label class="gf gw"><span>Részletek</span><textarea data-gjsz="1" rows="3" placeholder="pl. nem emel, akkumulátor lemerült; a kezelőt X vitte el…"></textarea></label><p class="hint">Az admin értesítést kap, és ő vezeti át a gép adataira.</p></div>
+    <div class="gmf"><span style="flex:1"></span><button class="b sm" data-gjelx="1">Mégse</button><button class="b sm pri" data-gjsave="${esc(x.id)}">Bejelentés elküldése</button></div></div></div>`; }
+  function gepJelPanel() { const U = gepJelUj(), adm = ISADM(); if (!U.length) return '';
+    return `<div class="gjelp"><div class="gjelh"><b>📣 Bejelentések a csapatoktól</b><span>${U.length} új</span></div><ul>${U.map(j => `<li><button class="gtg" data-ggo="${esc(j.gep)}">${esc((GEP[j.gep] || {}).azon || '?')}</button><span><b>${esc(GJT[j.t] || j.t)}</b>${j.sz ? ' – ' + esc(j.sz) : ''}<small>${esc(j.nev || '')}${j.ceg ? ' · ' + esc(cegNev(j.ceg)) : ''} · ${esc(huD(String(j.at).slice(0, 10)))} ${esc(String(j.at).slice(11, 16))}</small></span>${adm ? `<span class="gjelb"><button class="b sm pri" data-gjok="${esc(j.id)}" title="A gép adataiba átvezeti (állapot / kezelő / kulcs), és lezárja">✓ Átvezet</button><button class="b sm" data-gjno="${esc(j.id)}" title="Lezárja változtatás nélkül">Lezár</button></span>` : '<span class="hint">az adminnál</span>'}</li>`).join('')}</ul></div>`; }
+  async function gepJelOk(jid, apply) { const j = GJEL[jid]; if (!j) return; const x = GEP[j.gep]; const txt = (GJT[j.t] || j.t).replace(/^\S+\s/, '') + (j.sz ? ' – ' + j.sz : '') + ' (bejelentette: ' + (j.nev || '?') + ')';
+    if (x && apply) { const o = JSON.parse(JSON.stringify(x));
+      if (j.t === 'hibas') { o.allapot = 'hibas'; o.hiba = j.sz || 'bejelentés szerint hibás'; }
+      if (j.t === 'kez_nincs') o.kezelo = Object.assign({}, o.kezelo, { mod: 'nincs' });
+      if (j.t === 'kez_mashol') o.kezelo = Object.assign({}, o.kezelo, { mod: 'mashol', hol: j.sz || '' });
+      if (j.t === 'kulcs') o.kulcs = Object.assign({}, o.kulcs, { mod: 'nincs', megj: j.sz || '' });
+      await gepPut(j.gep, o, 'Bejelentés átvezetve: ' + txt); }
+    else if (x) await gepPut(j.gep, x, 'Bejelentés lezárva (változtatás nélkül): ' + txt);
+    const nj = Object.assign({}, j, { st: apply ? 'atvezetve' : 'lezarva', zar: new Date().toISOString(), zarta: TNAME || '' }); GJEL[jid] = nj; await docPut('gepjel', jid, nj); renderPane(); }
+  // -- QR-kód: a link a program címe + #g=<gép id>
+  const gepUrl = x => location.origin + location.pathname + '#g=' + encodeURIComponent(x.id);
+  const gepQrSvg = (x, sz) => { try { return QR.svg(gepUrl(x), sz || 120, { quiet: 1 }); } catch (e) { return ''; } };
+  function gepQrPrint(ids) { const L = ids.map(id => Object.assign({ id }, GEP[id])).filter(x => x.azon); if (!L.length) { toast('Nincs kijelölt gép.'); return; }
+    const lab = x => `<div class="lb"><div class="q">${gepQrSvg(x, 150)}</div><div class="t"><small>EMELŐGÉP · EVE Debrecen</small><b>${esc(x.azon)}</b><span>${esc(x.modell || '')}</span><span>${esc(x.tipus ? GTIP[x.tipus] : '')}${x.marka ? ' · ' + esc(x.marka) : ''}</span><i>Telefonnal beolvasva: a gép adatlapja, hibabejelentés</i></div></div>`;
+    printDoc(`<!doctype html><html><head><meta charset="utf-8"><title>Emelőgép QR-matricák</title><style>@page{size:A4;margin:10mm}body{font-family:Arial,sans-serif;margin:0}.g{display:grid;grid-template-columns:1fr 1fr;gap:6mm}.lb{border:1.5px dashed #888;border-radius:4mm;padding:4mm;display:flex;gap:4mm;align-items:center;break-inside:avoid;height:52mm;box-sizing:border-box}.q svg{width:42mm;height:42mm;display:block}.t{display:flex;flex-direction:column;gap:1mm}.t small{font-size:8pt;color:#555;letter-spacing:.5pt}.t b{font-size:22pt;font-family:monospace}.t span{font-size:11pt}.t i{font-size:7.5pt;color:#666;margin-top:2mm}</style></head><body><div class="g">${L.map(lab).join('')}</div></body></html>`); }
+  function gepDeep(txt) { const m = /[#&]g=([^&\s]+)/.exec(txt || location.hash || ''); if (!m) return false; let id = m[1]; try { id = decodeURIComponent(id); } catch (e) { }
+    S.tab = 'kovet'; KV = 'gep'; GEPV = 'kartya'; Object.assign(GEPF, { cs: '', all: '', tip: '', q: '' }); GEPOPEN.add(id); if (!txt) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { } }
+    renderPane(); let n = 0; const go = () => { const e = document.getElementById('gep-' + id); if (e) { e.scrollIntoView({ block: 'start', behavior: 'smooth' }); e.classList.add('gflash'); setTimeout(() => e.classList.remove('gflash'), 2000); } else if (n++ < 20) setTimeout(() => { renderPane(); go(); }, 700); }; setTimeout(go, 200); return true; }
+  window.__gepDeep = gepDeep; setTimeout(() => gepDeep(), 1500); window.addEventListener('hashchange', () => gepDeep());
+  // -- kezelők nyilvántartása: col 'gep', id 'kz_…', { kz:true, azon, gep, mod, hol, megj, naplo }
+  const gepKezL = () => Object.entries(GEP).filter(([k, x]) => x && x.kz).map(([k, x]) => Object.assign({ id: k }, x)).sort((a, b) => String(a.azon).localeCompare(String(b.azon), 'hu', { numeric: true }));
+  const gepKezOf = gid => gepKezL().filter(k => k.gep === gid);
+  const GKZM = { gepnel: 'A gépnél / a csapatnál', rajta: 'A gépre szerelve (nem levehető)', mashol: 'Máshol van', nincs: 'Nem található', szerviz: 'Javításon / cserén' };
+  function gepKezView(A) { const K = gepKezL(), adm = ISADM(), gn = id => (GEP[id] || {}).azon || '–';
+    const noK = A.filter(x => !gepKezOf(x.id).length && x.tipus !== 'targonca' && (x.kezelo || {}).mod !== 'na');
+    return `<div class="gkzv">${adm ? `<div class="row" style="gap:6px;flex-wrap:wrap"><button class="b sm pri" data-gkznew="1">+ Új kezelő</button>${noK.length ? `<button class="b sm" data-gkzseed="1" title="Minden géphez, amelyhez még nincs, létrehoz egy kezelőt a gép jelenlegi kezelő-adataival">Kezelők létrehozása a gépek adataiból (${noK.length})</button>` : ''}</div>` : ''}
+      ${K.length ? `<div class="gkzl">${K.map(k => `<div class="gkzc gk-${esc(k.mod || '')}"><div><b class="gaz">${esc(k.azon)}</b><small>kezelő (távirányító)</small></div><div><span>Géphez</span><b>${k.gep ? `<button class="gtg" data-ggo="${esc(k.gep)}">${esc(gn(k.gep))}</button> <small>${esc((GEP[k.gep] || {}).modell || '')}</small>` : '–'}</b></div><div><span>Hol van</span><b>${esc(GKZM[k.mod] || 'nincs adat')}${k.hol ? ' – ' + esc(k.hol) : ''}</b></div>${k.megj ? `<div class="gkzm">${esc(k.megj)}</div>` : ''}${adm ? `<div class="gkza"><button class="b sm" data-gkzed="${esc(k.id)}">✎ Módosít / áthelyez</button></div>` : ''}</div>`).join('')}</div>` : '<div class="gempty"><b>Még nincs kezelő rögzítve</b><span>A „Kezelők létrehozása a gépek adataiból” gomb a gépeknél már beírt adatokból egy lépésben felveszi őket.</span></div>'}</div>`; }
+  function gepKezForm(id) { const k = id === '_new' ? { azon: '', gep: '', mod: 'gepnel', hol: '' } : (GEP[id] || {}), A = gepL().filter(x => !x.kivon);
+    return `<div class="gmod"><div class="gmodin gmsm" id="gep-kz"><div class="gmh"><div><small>Kezelő</small><b>${esc(k.azon || 'Új kezelő')}</b></div><button class="gx" data-gkzx="1">✕</button></div>
+    <div class="gmb"><div class="gfg" style="grid-template-columns:1fr 1fr"><label class="gf"><span>Kezelő jelölése *</span><input data-gkf="azon" value="${esc(k.azon || '')}" placeholder="pl. KZ-AD50927 vagy a matrica száma"></label>
+    <label class="gf"><span>Melyik géphez tartozik</span><select data-gkf="gep"><option value="">– egyikhez sem –</option>${A.map(x => `<option value="${esc(x.id)}"${k.gep === x.id ? ' selected' : ''}>${esc(x.azon)} · ${esc(x.modell || '')}</option>`).join('')}</select></label>
+    <label class="gf"><span>Hol van</span><select data-gkf="mod">${Object.entries(GKZM).map(([a, b]) => `<option value="${a}"${(k.mod || '') === a ? ' selected' : ''}>${esc(b)}</option>`).join('')}</select></label>
+    <label class="gf"><span>Kinél / hol pontosan</span><input data-gkf="hol" value="${esc(k.hol || '')}" placeholder="pl. Márton Laci autójában, kínai megrendelőnél"></label>
+    <label class="gf gw"><span>Megjegyzés</span><textarea data-gkf="megj" rows="2">${esc(k.megj || '')}</textarea></label></div>
+    ${(k.naplo || []).length ? `<div class="gsec"><h5>Napló</h5><ol class="gnap">${k.naplo.slice().reverse().map(n => `<li><time>${esc(huD(String(n.t).slice(0, 10)))}</time><span>${esc(n.sz)}</span></li>`).join('')}</ol></div>` : ''}</div>
+    <div class="gmf">${id !== '_new' ? `<button class="b sm gdel" data-gkzdel="${esc(id)}">🗑 Törlés</button>` : ''}<span style="flex:1"></span><button class="b sm" data-gkzx="1">Mégse</button><button class="b sm pri" data-gkzsave="${esc(id)}">Mentés</button></div></div></div>`; }
+  async function gepKezSync(gid) { if (!gid || !GEP[gid]) return; const K = gepKezOf(gid); if (!K.length) return; const k = K[0], x = GEP[gid];
+    const nk = { mod: k.mod === 'szerviz' ? 'mashol' : k.mod, hol: k.mod === 'szerviz' ? ('javításon' + (k.hol ? ' – ' + k.hol : '')) : (k.hol || ''), kid: k.id };
+    if (JSON.stringify([x.kezelo && x.kezelo.mod, x.kezelo && x.kezelo.hol, x.kezelo && x.kezelo.kid]) !== JSON.stringify([nk.mod, nk.hol, nk.kid])) await gepPut(gid, Object.assign({}, x, { kezelo: Object.assign({}, x.kezelo, nk) }), 'Kezelő (' + k.azon + '): ' + (GKZM[k.mod] || '') + (k.hol ? ' – ' + k.hol : '')); }
+  async function gepKezSave(id) { const box = document.getElementById('gep-kz'); if (!box) return; const v = {}; box.querySelectorAll('[data-gkf]').forEach(e => { v[e.dataset.gkf] = e.value.trim(); }); if (!v.azon) { toast('A kezelő jelölése kötelező.'); return; }
+    const nid = id === '_new' ? 'kz_' + Date.now().toString(36) : id, old = GEP[nid] || {}, ch = [];
+    if (old.gep !== v.gep) ch.push('gép: ' + ((GEP[old.gep] || {}).azon || '–') + ' → ' + ((GEP[v.gep] || {}).azon || '–')); if (old.mod !== v.mod || (old.hol || '') !== v.hol) ch.push((GKZM[v.mod] || '') + (v.hol ? ' – ' + v.hol : ''));
+    const o = Object.assign({}, old, v, { kz: true, upd: gepUpd(), naplo: (old.naplo || []).concat(ch.length || id === '_new' ? [{ t: new Date().toISOString(), ki: TNAME || '', sz: (id === '_new' ? 'Felvéve' : 'Módosítva') + (ch.length ? ': ' + ch.join('; ') : '') }] : []) });
+    GEP[nid] = o; await docPut('gep', nid, o);
+    if (old.gep && old.gep !== v.gep && GEP[old.gep] && !gepKezOf(old.gep).length) await gepPut(old.gep, Object.assign({}, GEP[old.gep], { kezelo: Object.assign({}, GEP[old.gep].kezelo, { mod: 'nincs', hol: '', kid: '' }) }), 'A kezelő (' + v.azon + ') átkerült másik géphez');
+    await gepKezSync(v.gep); GEPKZ = null; toast('Kezelő mentve: ' + v.azon); renderPane(); }
+  async function gepKezSeed() { let n = 0; for (const x of gepL().filter(x => !x.kivon && !gepKezOf(x.id).length && x.tipus !== 'targonca' && (x.kezelo || {}).mod !== 'na')) { const k = x.kezelo || {};
+      const id = 'kz_' + String(x.azon).replace(/[^A-Za-z0-9]/g, ''), o = { kz: true, azon: 'KZ-' + x.azon, gep: x.id, mod: k.mod && GKZM[k.mod] ? k.mod : 'gepnel', hol: k.hol || '', megj: k.mod ? '' : 'A gépnél nem volt kezelő-adat – ellenőrizni', upd: gepUpd(), naplo: [{ t: new Date().toISOString(), ki: TNAME || '', sz: 'Felvéve a gép adataiból' }] };
+      if (!k.mod) o.mod = 'nincs'; GEP[id] = o; await docPut('gep', id, o); n++; }
+    toast(n + ' kezelő létrehozva'); renderPane(); }
+  // -- események
+  document.addEventListener('click', async ev => { const t = ev.target; if (t && t.dataset && t.dataset.gpick != null) { ev.stopPropagation(); return; }
+    const b = t.closest && t.closest('[data-gmx],[data-gball],[data-gbc],[data-gbop],[data-gbx],[data-gqrsel],[data-gqrp],[data-gqr1],[data-gjel],[data-gjelx],[data-gjsave],[data-gjok],[data-gjno],[data-gkznew],[data-gkzseed],[data-gkzed],[data-gkzx],[data-gkzsave],[data-gkzdel]'); if (!b) return; const d = b.dataset; ev.preventDefault(); ev.stopPropagation();
+    if (d.gjel) { GEPJM = d.gjel; renderPane(); return; }
+    if (d.gjelx) { GEPJM = null; renderPane(); return; }
+    if (d.gjsave) { const box = document.getElementById('gep-jel'); const t2 = box.querySelector('[data-gjt]').value, sz = box.querySelector('[data-gjsz]').value.trim(); if ((t2 === 'egyeb' || t2 === 'hibas') && !sz) { toast('Írd le röviden, mi a gond.'); return; }
+      const id = 'J' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), j = { id, gep: d.gjsave, t: t2, sz, uid: TUID || '', nev: TNAME || '', ceg: MYCEG(), at: new Date().toISOString(), st: 'uj' };
+      GJEL[id] = j; await docPut('gepjel', id, j); GEPJM = null; toast('Bejelentés elküldve – köszönjük!'); renderPane(); return; }
+    if (d.gqr1) { gepQrPrint([d.gqr1]); return; }
+    if (!ISADM()) return;
+    if (d.gmx) { const [gid, cid] = d.gmx.split('|'), x = GEP[gid]; if (!x) return; const cur = x.csapat || []; await gepSetCs(gid, cur.includes(cid) ? cur.filter(c => c !== cid) : cur.concat([cid]), 'Kiosztás'); renderPane(); return; }
+    if (d.gball) { for (const x of gepFilt(gepL().filter(x => !x.kivon))) GSELG.add(x.id); renderPane(); return; }
+    if (d.gbc) { if (GBULK.has(d.gbc)) GBULK.delete(d.gbc); else GBULK.add(d.gbc); renderPane(); return; }
+    if (d.gbop) { await gepBulk(d.gbop); return; }
+    if (d.gbx) { GSELG.clear(); renderPane(); return; }
+    if (d.gqrsel) { gepQrPrint([...GSELG]); return; }
+    if (d.gqrp) { gepQrPrint((GSELG.size ? [...GSELG] : gepFilt(gepL().filter(x => !x.kivon)).map(x => x.id))); return; }
+    if (d.gjok) { await gepJelOk(d.gjok, true); return; }
+    if (d.gjno) { await gepJelOk(d.gjno, false); return; }
+    if (d.gkznew) { GEPKZ = '_new'; renderPane(); return; }
+    if (d.gkzseed) { await gepKezSeed(); return; }
+    if (d.gkzed) { GEPKZ = d.gkzed; renderPane(); return; }
+    if (d.gkzx) { GEPKZ = null; renderPane(); return; }
+    if (d.gkzsave) { await gepKezSave(d.gkzsave); return; }
+    if (d.gkzdel) { const k = GEP[d.gkzdel]; if (!k) return; if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = 'Biztosan? Kattints újra'; return; } delete GEP[d.gkzdel]; await docDel('gep', d.gkzdel); GEPKZ = null; toast('Kezelő törölve: ' + k.azon); renderPane(); return; } }, true);
+  document.addEventListener('change', ev => { const t = ev.target; if (!t || !t.dataset || t.dataset.gpick == null) return; if (t.checked) GSELG.add(t.dataset.gpick); else GSELG.delete(t.dataset.gpick); renderPane(); });
   // ---- mentés, események ----
   function gepRead(id) { const box = document.getElementById('gep-ed'); if (!box) return null; const o = JSON.parse(JSON.stringify(id && GEP[id] ? GEP[id] : {}));
     for (const el of box.querySelectorAll('[data-gf]')) { const p = el.dataset.gf.split('.'); let v = el.value.trim(); if (el.dataset.gf === 'megr.lista') v = v === 'igen'; if (p[0] === 'talp') v = v === 'igen' ? true : v === 'nem' ? false : null; if (p.length === 2) { o[p[0]] = o[p[0]] || {}; o[p[0]][p[1]] = v; } else o[p[0]] = v; }
     o.csapat = [...box.querySelectorAll('[data-gfc]')].filter(c => c.checked).map(c => c.value); return o; }
   const gepUpd = () => ({ at: new Date().toISOString(), by: TNAME || '' });
-  async function gepPut(id, o, napl) { o = Object.assign({}, o); delete o.id; o.upd = gepUpd(); if (napl) o.naplo = (o.naplo || []).concat([{ t: new Date().toISOString(), ki: TNAME || '', sz: napl }]); GEP[id] = o; await docPut('gep', id, o); }
+  async function gepPut(id, o, napl) { o = Object.assign({}, o); delete o.id; if (!o.kz) gepHistSync(GEP[id], o); o.upd = gepUpd(); if (napl) o.naplo = (o.naplo || []).concat([{ t: new Date().toISOString(), ki: TNAME || '', sz: napl }]); GEP[id] = o; await docPut('gep', id, o); }
   const gepCfgPut = async c => { c = Object.assign({}, GEP._cfg || {}, c); GEP._cfg = c; await docPut('gep', '_cfg', c); };
   function gepXlsx() { const A = gepFilt(gepL()), sub = new Date().toLocaleDateString('hu-HU'), foot = 'RexDuct · emelőgépek · ' + sub;
     const r0 = [[{ v: 'Emelőgépek – összesítő', s: 'title' }], [{ v: sub + ' · ' + A.length + ' gép', s: 'sub' }], []], hr = r0.length;
@@ -19506,7 +19630,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     toast(n + ' gép betöltve' + (Array.isArray(C) ? ', ' + C.length + ' csapat' : '') + (nd ? ', ' + nd + ' törölve' : '')); renderPane(); }
   const gepRP = () => { try { localStorage.setItem('promat-gepv', GEPV); localStorage.setItem('promat-gepf', JSON.stringify(GEPF)); } catch (e) { } renderPane(); };
   document.addEventListener('toggle', ev => { const d = ev.target && ev.target.dataset; if (d && d.gdet) { if (ev.target.open) GEPOPEN.add(d.gdet); else GEPOPEN.delete(d.gdet); } }, true);
-  document.addEventListener('click', async ev => { const b = ev.target.closest && ev.target.closest('[data-gview],[data-gflt],[data-ggo],[data-geped],[data-gepadd],[data-gepcancel],[data-gepsave],[data-gepdel],[data-gnap],[data-gcsed],[data-gcsadd],[data-gcsdel],[data-gcsx],[data-gimp],[data-gexp],[data-gxl],[data-gclr],[data-gtall],[data-gevt],[data-gevx],[data-gevsave],[data-gkvissza]'); if (!b) return; const d = b.dataset;
+  document.addEventListener('click', async ev => { if (ev.target && ev.target.dataset && ev.target.dataset.gpick != null) return; const b = ev.target.closest && ev.target.closest('[data-gview],[data-gflt],[data-ggo],[data-geped],[data-gepadd],[data-gepcancel],[data-gepsave],[data-gepdel],[data-gnap],[data-gcsed],[data-gcsadd],[data-gcsdel],[data-gcsx],[data-gimp],[data-gexp],[data-gxl],[data-gclr],[data-gtall],[data-gevt],[data-gevx],[data-gevsave],[data-gkvissza]'); if (!b) return; const d = b.dataset;
     if (d.gview) { GEPV = d.gview; gepRP(); return; }
     if (d.gclr) { Object.assign(GEPF, { cs: '', all: '', tip: '', q: '' }); gepRP(); return; }
     if (d.gtall) { if (GEPOPEN.has('_tall')) GEPOPEN.delete('_tall'); else GEPOPEN.add('_tall'); renderPane(); return; }
@@ -19544,7 +19668,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     if (d.gmv) { const x = GEP[d.gmv]; if (!x || !t.value) return; const nc = t.value === '-' ? [] : [t.value]; await gepPut(d.gmv, Object.assign({}, x, { csapat: nc }), 'Kiosztás: ' + (nc.length ? gepCsN(nc[0]) : 'nincs kiosztva')); toast(x.azon + ' → ' + (nc.length ? gepCsN(nc[0]) : 'nincs kiosztva')); renderPane(); return; }
     if (d.gcsn || d.gcsc) { const id = d.gcsn || d.gcsc, C = gepCfg().csapatok.map(c => c.id === id ? Object.assign({}, c, d.gcsn ? { nev: t.value.trim() || c.nev } : { ceg: t.value }) : c); await gepCfgPut({ csapatok: C }); renderPane(); return; } });
   document.addEventListener('input', ev => { const t = ev.target; if (!t || !t.dataset || t.dataset.gq == null) return; GEPF.q = t.value; clearTimeout(t.__q); t.__q = setTimeout(() => { const pos = t.selectionStart; gepRP(); setTimeout(() => { const n = document.querySelector('[data-gq]'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) { } } }, 0); }, 300); });
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (GEPED || GEPNEW || GEPCS || GEPEV) && document.querySelector('.gmod')) { GEPED = GEPNEW = GEPEV = null; GEPCS = false; renderPane(); } });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && (GEPED || GEPNEW || GEPCS || GEPEV || GEPJM || GEPKZ) && document.querySelector('.gmod')) { GEPED = GEPNEW = GEPEV = GEPJM = GEPKZ = null; GEPCS = false; renderPane(); } });
   if (!document.getElementById('gepcss')) { const st = document.createElement('style'); st.id = 'gepcss'; st.textContent = `
 .gep{--gok:#1E7A46;--gokb:#E4F4EA;--gbad:#B42318;--gbadb:#FDE8E6;--gwarn:#9A5B00;--gwarnb:#FFF2DA;--gmute:#5B6570;--gmuteb:#EDF0F3;--ggone:#6E3AA8;--ggoneb:#F1E9FB;--ginfo:#1F4E8C;--ginfob:#E8F0FB;gap:14px}
 .gep .gaz{font-family:var(--mono);font-weight:700;letter-spacing:.2px}
@@ -19636,6 +19760,26 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
 .gkb{flex:1;min-width:0;display:flex;gap:8px;align-items:center;border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit;text-align:left}.gkb>span:last-child{display:flex;flex-direction:column;min-width:0}.gkb small{font-size:11.5px;color:var(--mute)}.gkb .gtico{width:24px}.gkb .gtico svg{width:22px;height:22px}
 .gki select{flex:1 0 100%;border:1px solid #DCE3E9;border-radius:7px;font:inherit;font-size:12px;padding:3px 6px;color:var(--mute);background:#FAFBFC}.gkempty{margin:0;font-size:12.5px;color:var(--mute)}
 .gempty{border:1px dashed #C6D0D9;border-radius:14px;padding:30px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--mute);text-align:center}.gempty svg{width:56px;height:56px;color:#A9B6C2}.gempty b{color:#3D4B57}
+.gpick{position:absolute;right:14px;top:8px;display:flex;align-items:center;gap:4px;font-size:11px;color:var(--mute);cursor:pointer}.gpick input{width:18px;height:18px;margin:0;cursor:pointer}.gpickt{width:16px;height:16px;margin:0 6px 0 0;vertical-align:middle}
+.gbulkhint{margin:0;font-size:12.5px;color:var(--mute)}.gkb2{border:0;background:none;color:var(--ginfo);font:inherit;cursor:pointer;padding:0;text-decoration:underline}
+.gbulk{position:sticky;bottom:8px;z-index:20;display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#1D3B45;color:#fff;border-radius:12px;padding:9px 12px;box-shadow:0 8px 24px #0004}
+.gbulkc{display:flex;gap:4px;flex-wrap:wrap}.gbulkc button{border:1px solid #ffffff55;background:none;color:#fff;border-radius:7px;padding:4px 9px;font:inherit;font-size:12.5px;cursor:pointer}.gbulkc button.on{background:#fff;color:#1D3B45;font-weight:700}
+.gbulka{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.gmx{border:1px solid var(--line);border-radius:12px;background:var(--panel,#fff);overflow:hidden}
+.gmx-r{display:grid;grid-template-columns:minmax(200px,1.4fr) repeat(var(--n),minmax(0,1fr));align-items:center;border-bottom:1px solid #EEF1F4;border-left:4px solid #AAB4BE}.gmx-r:last-child{border-bottom:0}
+.gmx-r.gs-ok{border-left-color:#2E9D5F}.gmx-r.gs-bad{border-left-color:#D9443A}.gmx-r.gs-warn{border-left-color:#E3A008}.gmx-r.gs-gone{border-left-color:#8E5CC9}
+.gmx-h{background:#F6F8FA;font-size:11.5px;font-weight:700;color:var(--mute);border-left-color:transparent}.gmx-h .gmx-c{flex-direction:column;text-align:center;padding:8px 4px;line-height:1.2}.gmx-h small{font-weight:400}
+.gmx-g{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:7px 10px;min-width:0}.gmx-g small{color:var(--mute);font-size:11.5px}
+.gmx-c{display:flex;justify-content:center;padding:4px}.gmx-b{width:100%;max-width:120px;height:32px;border:1.5px solid #CBD4DC;border-radius:8px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;color:#fff}.gmx-b em{display:none;font-style:normal}
+.gmx-b.on{background:#2E7DD1;border-color:#2E7DD1}.gmx-b:not(.on):hover{border-color:#2E7DD1;background:#EEF5FD}.gmx-b:disabled{cursor:default}
+.ghist{width:100%;border-collapse:collapse;font-size:12.5px}.ghist td{padding:3px 6px;border-bottom:1px solid #EEF1F4}.ghist tr.gnow td{font-weight:600;color:var(--ginfo)}
+.gqrrow{display:flex;gap:10px;align-items:center}.gqrrow svg{width:84px;height:84px;flex:0 0 84px}.gkzmini{font-size:12.5px}
+.gjelp{border:1px solid #F5C2C7;background:#FFF6F6;border-radius:12px;padding:10px 14px}.gjelh{display:flex;gap:10px;align-items:baseline}.gjelh span{color:var(--gbad);font-weight:700;font-size:13px}
+.gjelp ul{list-style:none;margin:6px 0 0;padding:0}.gjelp li{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #F5DADD;font-size:13px;flex-wrap:wrap}.gjelp li>span:nth-child(2){flex:1;min-width:200px}.gjelp li small{display:block;color:var(--mute);font-size:11.5px}.gjelb{display:flex;gap:5px}
+.gkzv{display:flex;flex-direction:column;gap:10px}.gkzl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.gkzc{border:1px solid var(--line);border-left:4px solid #AAB4BE;border-radius:12px;background:var(--panel,#fff);padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:13px}.gkzc>div{display:flex;flex-direction:column}.gkzc span{font-size:11px;color:var(--mute)}.gkzc small{color:var(--mute);font-size:11.5px;font-weight:400}
+.gkzc.gk-gepnel,.gkzc.gk-rajta{border-left-color:#2E9D5F}.gkzc.gk-mashol,.gkzc.gk-szerviz{border-left-color:#E3A008}.gkzc.gk-nincs{border-left-color:#D9443A}.gkzm{color:#3D4B57}.gkza{flex-direction:row!important;justify-content:flex-end}
+@media (max-width:760px){.gmx-h{display:none}.gmx-r{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px}.gmx-g{flex-basis:100%;padding:2px 0}.gmx-c{padding:0}.gmx-b{width:auto;max-width:none;height:auto;padding:5px 9px;font-size:12px;color:#3D4B57}.gmx-b em{display:inline}.gmx-b.on{color:#fff}.gbulka{margin-left:0}.gpick{top:6px}}
 @media (max-width:1100px){.gtw{display:none}.gtl-m{display:flex}}
 @media (max-width:760px){.gcards{grid-template-columns:1fr}.gfg{grid-template-columns:1fr 1fr}.gacts{margin-left:0;width:100%}.gacts .pri{flex:1}.gtiles{grid-template-columns:repeat(2,minmax(0,1fr))}.gtile b{font-size:20px}.gtile{padding:7px 10px 8px}.gtiles{gap:6px}.gtool{position:static}.gseg{width:100%}.gseg button{flex:1;padding:7px 4px}.gfsel{flex:1 1 45%}.gfsel select{flex:1;max-width:none}.gmod{padding:0}.gmodin{border-radius:0;max-height:100vh;min-height:100vh}.gmf{border-radius:0}}
 @media (max-width:420px){.gkey{grid-template-columns:1fr 1fr}.gimg{height:150px}.gfacts{grid-template-columns:1fr}.gfg{grid-template-columns:1fr}}
