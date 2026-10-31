@@ -13538,7 +13538,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 /******/ ])["default"];
 });</script>
 <script type="text/plain" id="papp">(() => {
-  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v185 (2026.10.31.)', PROJ = 'EVE-EL';
+  const D = window.PROMAT_DATA, LS = 'promat-konsz-v1', VER = 'v186 (2026.10.31.)', PROJ = 'EVE-EL';
   const $ = (s, r) => (r || document).querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const nf = (v, d) => (v == null || isNaN(v)) ? '–' : Number(v).toLocaleString('hu-HU', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
@@ -19920,15 +19920,15 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
     let szC = eu.mit !== 'gyart' ? (eu.ceg || '') : '', gyC = eg.gyCeg || (eu.mit !== 'szer' ? (eu.gyCeg || '') : '');
     if (!szC && eu.mit === 'gyart' && kinC(eu.ceg)) szC = eu.ceg; if (!szC && kinC(eg.ceg)) szC = eg.ceg;
     for (const f of FL) for (const x of f.sc || []) { if (x.sys !== r.sys || (x.ns && !x.ns.includes(r.n))) continue; if (!gyC && (f.ir === 'gy' || f.ir === 'gysz')) gyC = f.ceg || ''; if (!szC && (f.ir === 'sz' || f.ir === 'gysz')) szC = f.ceg || ''; }
-    const kin = kinC(szC); return { gyC, szC: kin ? '' : szC, kin, hatS: eu.ig || '', hatG: eg.ig || eu.ig || '' }; }
+    const kin = kinC(szC), utk = !kin && !!szC && (kinC(eg.ceg) || (eu.mit === 'gyart' && kinC(eu.ceg))); return { gyC, szC: kin ? '' : szC, kin, utk, hatS: eu.ig || '', hatG: eg.ig || eu.ig || '' }; }
   function optWork() { const U = allUnits().rows.filter(r => !r.stub && !r.k), by = new Map(), FL = Object.values(FEL || {}).filter(f => f && !f.kesz && f.sc);
     for (const r of U) { const t = trkOf(r.pid); if (t.kesz && t.szerelve) continue; const a = optAsg(r, t, FL), needG = !t.kesz, needS = !t.szerelve && !a.kin; if (!needG && !needS) continue;
-      const fG = needG ? optTeamOf(a.gyC, 'gy') : '', fS = needS ? optTeamOf(a.szC, 'sz') : '', key = r.sys + '|' + fG + '|' + fS + '|' + (a.kin ? 'k' : '');
-      let o = by.get(key); if (!o) by.set(key, o = { sys: r.sys, key, G: [], S: [], lv: new Map(), hat: '', fxG: fG, fxS: fS, kin: a.kin, gyC: needG ? a.gyC : '', szC: needS ? a.szC : '' });
+      const fG = needG ? optTeamOf(a.gyC, 'gy') : '', fS = needS ? optTeamOf(a.szC, 'sz') : '', key = r.sys + '|' + fG + '|' + fS + '|' + (a.kin ? 'k' : '') + (a.utk ? 'u' : '');
+      let o = by.get(key); if (!o) by.set(key, o = { sys: r.sys, key, G: [], S: [], lv: new Map(), hat: '', fxG: fG, fxS: fS, kin: a.kin, utk: a.utk, gyC: needG ? a.gyC : '', szC: needS ? a.szC : '' });
       if (needG) o.G.push(r); if (needS) o.S.push(r); o.lv.set(r.lv || '–', (o.lv.get(r.lv || '–') || 0) + r.dm);
       const h = needS ? a.hatS : a.hatG; if (h && (!o.hat || h < o.hat)) o.hat = h; }
     const L = []; for (const o of by.values()) { o.m2G = o.G.reduce((q, r) => q + r.dm, 0); o.m2S = o.S.reduce((q, r) => q + r.dm, 0); if (o.m2S < 0.05 && o.m2G < 0.05) continue; o.szint = [...o.lv.entries()].sort((a, b) => b[1] - a[1])[0]; o.szint = o.szint ? o.szint[0] : '–';
-      o.kiad = !!(o.fxG || o.fxS); o.tag = [o.kin ? 'kínai szereli' : '', o.fxG ? 'kiadva gyártásra: ' + ((gepCs(o.fxG) || {}).nev || '') : '', o.fxS ? 'kiadva szerelésre: ' + ((gepCs(o.fxS) || {}).nev || '') : '', !o.fxG && o.gyC ? 'gyártó (ütem): ' + cegNev(o.gyC) + ' – nincs ilyen csapat' : ''].filter(Boolean).join(' · '); L.push(o); }
+      o.kiad = !!(o.fxG || o.fxS); o.tag = [o.utk ? '⚠ ütközés: a gyártása „kínai szereléshez” van kiadva, de ' + cegNev(o.szC) + ' szerelési ütemében / feladatában is szerepel' : '', o.kin ? 'kínai szereli' : '', o.fxG ? 'kiadva gyártásra: ' + ((gepCs(o.fxG) || {}).nev || '') : '', o.fxS ? 'kiadva szerelésre: ' + ((gepCs(o.fxS) || {}).nev || '') : '', !o.fxG && o.gyC ? 'gyártó (ütem): ' + cegNev(o.gyC) + ' – nincs ilyen csapat' : ''].filter(Boolean).join(' · '); L.push(o); }
     return L; }
   // csapat költsége egy részre (Ft) – a csapat saját ára, ha nincs: a cég árlistája (Szerelők és árak), Spiko-Rex: belső költség a Beállításokból; null = nincs ár
   function optCost(c, kind, rows, P) { const A = (optCfg().ar[c.id]) || {}, m2 = rows.reduce((q, r) => q + r.dm, 0); if (!m2) return 0;
@@ -19991,6 +19991,7 @@ const OKTD = {"roles": ["admin", "cegvezeto", "rogzito", "olvaso", "vendeg"], "v
       <div class="gacts"><button class="b sm${OPTSET ? ' pri' : ''}" data-optset="1">👥 Csapatok, árak, teljesítmény</button><button class="b sm" data-optxl="1">⤓ Excel</button><button class="b sm" data-optimp="1" title="Csapatok és árak betöltése JSON fájlból">⤒ Betöltés</button></div></div>`;
     if (!TT.length) h += `<p class="warnbox">Még nincs beállítva, melyik csapat mit csinál. Nyisd meg a „Csapatok, árak, teljesítmény” részt, és add meg csapatonként: gyárt / szerel / mindkettő, létszám, kezdés.</p>`;
     if (!R.revM2) h += `<p class="warnbox">A bevétel (kínai TIG, EUR/m²) vagy az árfolyam nincs megadva a Beállításokban (Ütemezés → Kalkuláció → Paraméterek), így a fedezet nem számolható – a beosztás a költség és a határidők szerint készül.</p>`;
+    { const U = R.out.filter(o => o.w.utk); if (U.length) h += `<p class="warnbox">Ütközés ${U.length} részletnél (${esc([...new Set(U.map(o => o.w.sys))].join(', '))}): a gyártásuk a kínai szereléshez van kiadva, de egy magyar csapat szerelési ütemében vagy feladatában is benne vannak. Most a magyar szerelővel számolok – ha a kínai szereli, vedd ki őket a szerelési ütemből / feladatból.</p>`; }
     if (OPTSET) h += optSetHtml();
     { const G = R.gep, act = [...G.res.values()].filter(r => r.gm === 'teljes').length; if (act > G.teljesMax) h += `<p class="warnbox">Gép a szűk keresztmetszet: ${G.nKos} kosaras és ${G.nOll} ollós emelő van, így egyszerre legfeljebb <b>${G.teljesMax}</b> csapat szerelhet teljes géppárral az emeleten, a javaslatban ${act} szerelne. Részletek: Emelőgépek fül.</p>`; }
     h += `<div class="gtiles">${[['Hátralévő gyártás', nf(R.out.reduce((q, o) => q + o.w.m2G, 0), 0) + ' m²', 'tinfo'], ['Hátralévő szerelés', nf(R.out.reduce((q, o) => q + o.w.m2S, 0), 0) + ' m²', 'tinfo'], ['Kínai szereléshez gyártandó', nf(R.out.filter(o => o.w.kin).reduce((q, o) => q + o.w.m2G, 0), 0) + ' m²', 'tinfo', 'nálunk csak gyártás · ' + nf(R.kinGy, 1) + ' €/m²'], ['Már kiadva', nf(R.out.filter(o => o.kiad).reduce((q, o) => q + (o.w.fxG ? o.w.m2G : 0) + (o.w.fxS ? o.w.m2S : 0), 0), 0) + ' m²', 'tinfo', 'ütem / feladat szerint – rögzítve'], ['Becsült befejezés', fin ? optDate(R, fin) : '–', 'tok', fin ? '≈ ' + Math.ceil(fin) + ' munkanap' : ''], ['Fedezet (ahol van ár)', R.revM2 ? nf(Math.round(sumF / 1e6 * 10) / 10, 1) + ' M Ft' : '–', !R.revM2 ? 'twarn' : sumF < 0 ? 'tbad' : 'tok', R.revM2 ? '' : 'bevétel nincs megadva'], ['Veszteséges rendszer', R.revM2 ? loss : '–', loss ? 'tbad' : R.revM2 ? 'tok' : 'twarn'], ['Késésben', late, late ? 'twarn' : 'tok', 'a határidőhöz képest'], ['Ár hiányzik', miss, miss ? 'twarn' : 'tok', 'rendszer']].map(([l, v, cl, s]) => `<div class="gtile ${cl}"><span>${l}</span><b>${v}</b>${s ? `<small>${s}</small>` : ''}</div>`).join('')}</div>`;
